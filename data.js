@@ -731,7 +731,7 @@ const MODELS = [
       { area: "coding", benchmark: "HumanEval", score: "31.7", note: "pass@1" },
       { area: "coding", benchmark: "DS-1000", score: "25.0", note: "pass@1" },
     ],
-    blurb: "The smallest StarCoder2 tier — fast code completion for lightweight setups.",
+    blurb: "Fill-in-the-middle completion for IDE-style autocomplete — not tuned to follow chat instructions.",
     tags: ["coding"],
     quants: [
       { quant: "Q4_K_M", fileGB: 1.8, requiredGB: 3.3 },
@@ -753,7 +753,7 @@ const MODELS = [
       { area: "coding", benchmark: "HumanEval", score: "35.4", note: "pass@1" },
       { area: "coding", benchmark: "DS-1000", score: "27.8", note: "pass@1" },
     ],
-    blurb: "The mid-size StarCoder2 tier — a solid balance of quality and speed.",
+    blurb: "A step up in completion quality over the 3B — still autocomplete, not a conversational assistant.",
     tags: ["coding"],
     quants: [
       { quant: "Q4_K_M", fileGB: 4.4, requiredGB: 5.9 },
@@ -775,7 +775,7 @@ const MODELS = [
       { area: "coding", benchmark: "HumanEval", score: "46.3", note: "pass@1" },
       { area: "coding", benchmark: "DS-1000", score: "33.8", note: "pass@1" },
     ],
-    blurb: "Trained on The Stack v2 — broad language coverage across many programming languages.",
+    blurb: "Broad language coverage from The Stack v2 — still a completion model, not instruction-tuned like the Instruct release below.",
     tags: ["coding"],
     quants: [
       { quant: "Q4_K_M", fileGB: 9.9, requiredGB: 11.4 },
@@ -785,6 +785,29 @@ const MODELS = [
     links: {
       github: "https://github.com/bigcode-project/starcoder2",
       huggingface: "https://huggingface.co/bigcode/starcoder2-15b",
+      ollama: "https://ollama.com/library/starcoder2",
+    },
+  },
+  {
+    id: "starcoder2-15b-instruct",
+    name: "StarCoder2 Instruct",
+    params: "15B",
+    paramsB: 15,
+    benchmarks: [
+      { area: "coding", benchmark: "HumanEval", score: "72.6", note: "pass@1" },
+      { area: "coding", benchmark: "MBPP", score: "75.2", note: "pass@1" },
+      { area: "coding", benchmark: "DS-1000", score: "40.6", note: "pass@1" },
+    ],
+    blurb: "BigCode's own instruction-tuned fine-tune of the 15B — actually follows coding prompts, unlike the base model above.",
+    tags: ["coding"],
+    quants: [
+      { quant: "Q4_K_M", fileGB: 9.9, requiredGB: 11.4 },
+      { quant: "Q8_0", fileGB: 17.0, requiredGB: 19.6 },
+    ],
+    runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    links: {
+      github: "https://github.com/bigcode-project/starcoder2-self-align",
+      huggingface: "https://huggingface.co/bigcode/starcoder2-15b-instruct-v0.1",
       ollama: "https://ollama.com/library/starcoder2",
     },
   },
