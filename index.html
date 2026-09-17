@@ -122,15 +122,12 @@
           <div class="filter-group__body" id="runtime-filters"></div>
         </details>
 
-        <details class="filter-group">
-          <summary class="filter-group__title">Fit</summary>
-          <div class="filter-group__body">
-            <label class="filter-check">
-              <input type="checkbox" id="show-tight" checked />
-              <span>Include tight fits</span>
-            </label>
-          </div>
-        </details>
+        <div class="filter-group filter-group--static">
+          <label class="filter-check">
+            <input type="checkbox" id="show-tight" checked />
+            <span>Include tight fits</span>
+          </label>
+        </div>
 
         <button type="button" class="reset-filters" id="reset-filters">Reset filters</button>
       </aside>
@@ -153,7 +150,7 @@
       <div class="footnote__prose">
         <h2 class="footnote__title">How the fit — and the benchmarks — are calculated</h2>
         <p>If you have a dedicated GPU, we check the model against your VRAM first — that's what determines whether it runs at real-time speed. On Apple Silicon, RAM and GPU memory are the same pool, so we reserve about 4&nbsp;GB for the system and use the rest. With no dedicated GPU, models run on your CPU using system RAM, which works but is considerably slower.</p>
-        <p>Sizes shown are for the GGUF quantization listed, plus the memory a runtime typically needs on top for context and overhead. Actual usage varies with context length and settings — treat these as planning numbers, not guarantees.</p>
+        <p>File sizes are real — read directly off each model's GGUF files on Hugging Face, not estimated. The "needs" figure adds a fixed overhead on top for the runtime and context (whichever is bigger: 1.5&nbsp;GB, or 15% of the file). Actual usage still varies with context length and settings, so treat it as a planning number, not a guarantee. Vision models (LLaVA, Qwen2-VL) also need a separate image-projector file that isn't counted in the size shown.</p>
         <p>In CPU-only mode, the tokens-per-second number is a rough estimate, not a benchmark. Decoding on a CPU is mostly limited by memory bandwidth, not raw compute, so we estimate speed as roughly (your RAM bandwidth ÷ the model's file size), halved to account for real-world overhead. We guess bandwidth from the CPU name you enter — a workstation-class chip (Threadripper, EPYC, Xeon) or an Apple Pro/Max/Ultra tier both point to a wider memory bus than a typical consumer chip. Leave the field blank and we assume a generic dual-channel setup.</p>
         <p>Benchmark scores come from each model's own Hugging Face model card, next to the area they measure. Scores marked <sup>†</sup> are cited in another model's own published comparison table rather than the source model's card — usually because the source card links out to a blog post instead of publishing numbers directly. Not every model has a published score for every area it's tagged for; we show what's actually published rather than estimate.</p>
         <p>None of the runtimes below use a Neural Processing Unit (NPU) for LLM inference yet, including Apple's Neural Engine. NPUs accelerate other on-device AI tasks today, but the model formats here run on CPU or GPU.</p>

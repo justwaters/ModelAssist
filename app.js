@@ -251,18 +251,16 @@
     const benchmarks = model.benchmarks || [];
     if (benchmarks.length === 0) return "";
     const selectedTags = pickTags();
-    const rows = benchmarks
+    const pills = benchmarks
       .map((b) => {
         const isMatch = selectedTags.size > 0 && selectedTags.has(b.area);
         return `
-          <div class="bench-row${isMatch ? " bench-row--match" : ""}">
-            <span class="bench-row__area">${b.area}</span>
-            <span class="bench-row__name">${b.benchmark}</span>
-            <span class="bench-row__score">${b.score}${b.secondary ? '<sup class="bench-row__flag" title="From another model’s published comparison table, not this model’s own card">†</sup>' : ""}${b.note ? `<span class="bench-row__note">${b.note}</span>` : ""}</span>
-          </div>`;
+          <span class="bench-pill${isMatch ? " bench-pill--match" : ""}" title="${b.area}">
+            ${b.benchmark} <b>${b.score}</b>${b.secondary ? '<sup class="bench-pill__flag" title="From another model’s published comparison table, not this model’s own card">†</sup>' : ""}${b.note ? `<span class="bench-pill__note">${b.note}</span>` : ""}
+          </span>`;
       })
       .join("");
-    return `<div class="bench-table">${rows}</div>`;
+    return `<div class="bench-table">${pills}</div>`;
   }
 
   function renderModelRow(result) {

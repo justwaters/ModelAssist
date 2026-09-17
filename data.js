@@ -1,12 +1,16 @@
-// Curated catalog of local-runnable open models.
-// Sizes are approximate (GGUF quantization) — real usage varies with context length and runtime.
-// requiredGB = file size + typical runtime/context overhead at default context length.
+// Catalog of local-runnable open models.
+// Quant file sizes are real — pulled from GGUF mirrors on Hugging Face (bartowski/unsloth/etc.),
+// not estimated. requiredGB = fileGB + max(1.5, fileGB * 0.15), rounded to 1 decimal — the
+// runtime/context overhead on top of the raw file, applied consistently across every entry.
 //
 // benchmarks[]: pulled from each model's own Hugging Face model card where available.
 // Entries flagged `secondary: true` come from another model's published comparison table
-// (chiefly Microsoft's Phi-3.5/Phi-4 cards), not the model's own card — treat as directional.
-// Some cards (gated repos, or cards that link to an external blog instead of a table) had
-// no extractable numbers, so those models carry an empty benchmarks array rather than a guess.
+// (several source cards are access-gated on HF or link to an external blog instead of a table),
+// not the model's own card — flagged with a † in the UI. Some models carry no benchmarks at all
+// rather than a guess, when nothing extractable was found.
+//
+// Vision models (LLaVA, Qwen2-VL) also need a separate mmproj (vision projector) file to actually
+// do vision — that file isn't counted in the fileGB/requiredGB numbers below.
 
 const MODELS = [
   {
@@ -18,8 +22,8 @@ const MODELS = [
     blurb: "Fast and small. Good for quick edits and simple chat, not deep reasoning.",
     tags: ["writing", "chat", "general"],
     quants: [
-      { quant: "Q8_0", fileGB: 1.3, requiredGB: 2.0 },
-      { quant: "Q4_K_M", fileGB: 0.8, requiredGB: 1.5 },
+      { quant: "Q4_K_M", fileGB: 0.8, requiredGB: 2.3 },
+      { quant: "Q8_0", fileGB: 1.3, requiredGB: 2.8 },
     ],
     runtimes: ["Ollama", "llama.cpp", "MLX"],
     links: {
@@ -33,12 +37,16 @@ const MODELS = [
     name: "Llama 3.2",
     params: "3B",
     paramsB: 3,
-    benchmarks: [],
+    benchmarks: [
+      { area: "research", benchmark: "MMLU", score: "61.8", note: "5-shot", secondary: true },
+      { area: "chat", benchmark: "Arena-Hard", score: "17.0", note: "", secondary: true },
+      { area: "research", benchmark: "GPQA", score: "24.3", note: "0-shot, CoT", secondary: true },
+    ],
     blurb: "A step up in coherence over the 1B — still light enough for laptops.",
     tags: ["writing", "chat", "general"],
     quants: [
-      { quant: "Q8_0", fileGB: 3.4, requiredGB: 4.5 },
-      { quant: "Q4_K_M", fileGB: 2.0, requiredGB: 3.0 },
+      { quant: "Q4_K_M", fileGB: 2.0, requiredGB: 3.5 },
+      { quant: "Q8_0", fileGB: 3.4, requiredGB: 4.9 },
     ],
     runtimes: ["Ollama", "llama.cpp", "MLX"],
     links: {
@@ -60,8 +68,8 @@ const MODELS = [
     blurb: "Solid general-purpose model — the reasonable default for chat and writing.",
     tags: ["writing", "chat", "general", "research"],
     quants: [
-      { quant: "Q8_0", fileGB: 8.5, requiredGB: 10.5 },
-      { quant: "Q4_K_M", fileGB: 4.7, requiredGB: 6.5 },
+      { quant: "Q4_K_M", fileGB: 4.9, requiredGB: 6.4 },
+      { quant: "Q8_0", fileGB: 8.5, requiredGB: 10.0 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio", "MLX"],
     links: {
@@ -71,79 +79,106 @@ const MODELS = [
     },
   },
   {
+    id: "llama31-70b",
+    name: "Llama 3.1",
+    params: "70B",
+    paramsB: 70,
+    benchmarks: [],
+    blurb: "The largest Llama 3.1 tier — near frontier quality, but needs serious hardware to run locally.",
+    tags: ["research", "writing", "general"],
+    quants: [
+      { quant: "Q4_K_M", fileGB: 42.5, requiredGB: 48.9 },
+    ],
+    runtimes: ["Ollama", "llama.cpp", "LM Studio", "MLX"],
+    links: {
+      github: "https://github.com/meta-llama/llama-models",
+      huggingface: "https://huggingface.co/meta-llama/Llama-3.1-70B-Instruct",
+      ollama: "https://ollama.com/library/llama3.1",
+    },
+  },
+
+  {
+    id: "qwen25-05b",
+    name: "Qwen2.5",
+    params: "0.5B",
+    paramsB: 0.5,
+    benchmarks: [],
+    blurb: "Tiny and near-instant — good for quick lookups, not nuanced writing.",
+    tags: ["writing", "chat", "general"],
+    quants: [
+      { quant: "Q4_K_M", fileGB: 0.4, requiredGB: 1.9 },
+      { quant: "Q8_0", fileGB: 0.5, requiredGB: 2.0 },
+    ],
+    runtimes: ["Ollama", "llama.cpp", "LM Studio", "MLX"],
+    links: {
+      github: "https://github.com/QwenLM/Qwen2.5",
+      huggingface: "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct",
+      ollama: "https://ollama.com/library/qwen2.5",
+    },
+  },
+  {
+    id: "qwen25-15b",
+    name: "Qwen2.5",
+    params: "1.5B",
+    paramsB: 1.5,
+    benchmarks: [],
+    blurb: "A step up from the 0.5B with more reliable instruction following.",
+    tags: ["writing", "chat", "general"],
+    quants: [
+      { quant: "Q4_K_M", fileGB: 1.0, requiredGB: 2.5 },
+      { quant: "Q8_0", fileGB: 1.6, requiredGB: 3.1 },
+    ],
+    runtimes: ["Ollama", "llama.cpp", "LM Studio", "MLX"],
+    links: {
+      github: "https://github.com/QwenLM/Qwen2.5",
+      huggingface: "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct",
+      ollama: "https://ollama.com/library/qwen2.5",
+    },
+  },
+  {
+    id: "qwen25-3b",
+    name: "Qwen2.5",
+    params: "3B",
+    paramsB: 3,
+    benchmarks: [
+      { area: "research", benchmark: "MMLU", score: "65.0", note: "5-shot", secondary: true },
+      { area: "chat", benchmark: "Arena-Hard", score: "32.0", note: "", secondary: true },
+      { area: "research", benchmark: "GPQA", score: "23.4", note: "0-shot, CoT", secondary: true },
+    ],
+    blurb: "Noticeably steadier reasoning than the 1.5B, still runs on modest hardware.",
+    tags: ["writing", "chat", "general"],
+    quants: [
+      { quant: "Q4_K_M", fileGB: 1.9, requiredGB: 3.4 },
+      { quant: "Q8_0", fileGB: 3.3, requiredGB: 4.8 },
+    ],
+    runtimes: ["Ollama", "llama.cpp", "LM Studio", "MLX"],
+    links: {
+      github: "https://github.com/QwenLM/Qwen2.5",
+      huggingface: "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct",
+      ollama: "https://ollama.com/library/qwen2.5",
+    },
+  },
+  {
     id: "qwen25-7b",
     name: "Qwen2.5",
     params: "7B",
     paramsB: 7,
-    benchmarks: [],
+    benchmarks: [
+      { area: "research", benchmark: "MMLU", score: "72.6", note: "5-shot", secondary: true },
+      { area: "chat", benchmark: "Arena-Hard", score: "55.5", note: "", secondary: true },
+      { area: "research", benchmark: "GPQA", score: "30.6", note: "0-shot, CoT", secondary: true },
+    ],
     blurb: "Strong all-rounder with long context — a good research and writing default.",
     tags: ["writing", "research", "general", "chat"],
     quants: [
-      { quant: "Q8_0", fileGB: 8.1, requiredGB: 10.0 },
-      { quant: "Q4_K_M", fileGB: 4.7, requiredGB: 6.5 },
+      { quant: "Q4_K_M", fileGB: 4.7, requiredGB: 6.2 },
+      { quant: "Q8_0", fileGB: 8.1, requiredGB: 9.6 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio", "MLX"],
     links: {
       github: "https://github.com/QwenLM/Qwen2.5",
       huggingface: "https://huggingface.co/Qwen/Qwen2.5-7B-Instruct",
       ollama: "https://ollama.com/library/qwen2.5",
-    },
-  },
-  {
-    id: "qwen25-coder-7b",
-    name: "Qwen2.5 Coder",
-    params: "7B",
-    paramsB: 7,
-    benchmarks: [],
-    blurb: "Purpose-built for code completion and refactors at laptop-friendly size.",
-    tags: ["coding", "agents"],
-    quants: [
-      { quant: "Q8_0", fileGB: 8.1, requiredGB: 10.0 },
-      { quant: "Q4_K_M", fileGB: 4.7, requiredGB: 6.5 },
-    ],
-    runtimes: ["Ollama", "llama.cpp", "LM Studio"],
-    links: {
-      github: "https://github.com/QwenLM/Qwen2.5-Coder",
-      huggingface: "https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct",
-      ollama: "https://ollama.com/library/qwen2.5-coder",
-    },
-  },
-  {
-    id: "qwen25-coder-14b",
-    name: "Qwen2.5 Coder",
-    params: "14B",
-    paramsB: 14,
-    benchmarks: [],
-    blurb: "Noticeably better at multi-file reasoning than the 7B, still runs on one GPU.",
-    tags: ["coding", "agents"],
-    quants: [
-      { quant: "Q8_0", fileGB: 15.7, requiredGB: 18.5 },
-      { quant: "Q4_K_M", fileGB: 9.0, requiredGB: 11.5 },
-    ],
-    runtimes: ["Ollama", "llama.cpp", "LM Studio"],
-    links: {
-      github: "https://github.com/QwenLM/Qwen2.5-Coder",
-      huggingface: "https://huggingface.co/Qwen/Qwen2.5-Coder-14B-Instruct",
-      ollama: "https://ollama.com/library/qwen2.5-coder",
-    },
-  },
-  {
-    id: "qwen25-coder-32b",
-    name: "Qwen2.5 Coder",
-    params: "32B",
-    paramsB: 32,
-    benchmarks: [],
-    blurb: "Near frontier-level coding quality — needs a real workstation GPU or a lot of RAM.",
-    tags: ["coding", "agents"],
-    quants: [
-      { quant: "Q5_K_M", fileGB: 23.0, requiredGB: 26.5 },
-      { quant: "Q4_K_M", fileGB: 19.8, requiredGB: 23.0 },
-    ],
-    runtimes: ["Ollama", "llama.cpp", "LM Studio"],
-    links: {
-      github: "https://github.com/QwenLM/Qwen2.5-Coder",
-      huggingface: "https://huggingface.co/Qwen/Qwen2.5-Coder-32B-Instruct",
-      ollama: "https://ollama.com/library/qwen2.5-coder",
     },
   },
   {
@@ -158,8 +193,8 @@ const MODELS = [
     blurb: "More headroom for longer research documents and multi-step reasoning.",
     tags: ["research", "writing", "general"],
     quants: [
-      { quant: "Q8_0", fileGB: 15.7, requiredGB: 18.5 },
-      { quant: "Q4_K_M", fileGB: 9.0, requiredGB: 11.5 },
+      { quant: "Q4_K_M", fileGB: 9.0, requiredGB: 10.5 },
+      { quant: "Q8_0", fileGB: 15.7, requiredGB: 18.1 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
     links: {
@@ -177,7 +212,8 @@ const MODELS = [
     blurb: "One of the strongest models you can still self-host on a single high-VRAM GPU.",
     tags: ["research", "writing"],
     quants: [
-      { quant: "Q4_K_M", fileGB: 19.8, requiredGB: 23.0 },
+      { quant: "Q4_K_M", fileGB: 19.9, requiredGB: 22.9 },
+      { quant: "Q8_0", fileGB: 34.8, requiredGB: 40.0 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
     links: {
@@ -198,13 +234,151 @@ const MODELS = [
     blurb: "Flagship-class quality. Realistically needs multi-GPU or a large unified-memory Mac.",
     tags: ["research", "writing"],
     quants: [
-      { quant: "Q4_K_M", fileGB: 47.4, requiredGB: 52.0 },
+      { quant: "Q4_K_M", fileGB: 47.4, requiredGB: 54.5 },
     ],
     runtimes: ["Ollama", "llama.cpp"],
     links: {
       github: "https://github.com/QwenLM/Qwen2.5",
       huggingface: "https://huggingface.co/Qwen/Qwen2.5-72B-Instruct",
       ollama: "https://ollama.com/library/qwen2.5",
+    },
+  },
+
+  {
+    id: "qwen25-coder-05b",
+    name: "Qwen2.5 Coder",
+    params: "0.5B",
+    paramsB: 0.5,
+    benchmarks: [],
+    blurb: "Barely a gigabyte — useful for inline completions, not complex refactors.",
+    tags: ["coding", "agents"],
+    quants: [
+      { quant: "Q4_K_M", fileGB: 0.4, requiredGB: 1.9 },
+      { quant: "Q8_0", fileGB: 0.5, requiredGB: 2.0 },
+    ],
+    runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    links: {
+      github: "https://github.com/QwenLM/Qwen2.5-Coder",
+      huggingface: "https://huggingface.co/Qwen/Qwen2.5-Coder-0.5B-Instruct",
+      ollama: "https://ollama.com/library/qwen2.5-coder",
+    },
+  },
+  {
+    id: "qwen25-coder-15b",
+    name: "Qwen2.5 Coder",
+    params: "1.5B",
+    paramsB: 1.5,
+    benchmarks: [],
+    blurb: "A small step up for slightly more reliable completions on modest hardware.",
+    tags: ["coding", "agents"],
+    quants: [
+      { quant: "Q4_K_M", fileGB: 1.0, requiredGB: 2.5 },
+      { quant: "Q8_0", fileGB: 1.6, requiredGB: 3.1 },
+    ],
+    runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    links: {
+      github: "https://github.com/QwenLM/Qwen2.5-Coder",
+      huggingface: "https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B-Instruct",
+      ollama: "https://ollama.com/library/qwen2.5-coder",
+    },
+  },
+  {
+    id: "qwen25-coder-3b",
+    name: "Qwen2.5 Coder",
+    params: "3B",
+    paramsB: 3,
+    benchmarks: [],
+    blurb: "Handles single-file completions comfortably on a laptop.",
+    tags: ["coding", "agents"],
+    quants: [
+      { quant: "Q4_K_M", fileGB: 1.9, requiredGB: 3.4 },
+      { quant: "Q8_0", fileGB: 3.3, requiredGB: 4.8 },
+    ],
+    runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    links: {
+      github: "https://github.com/QwenLM/Qwen2.5-Coder",
+      huggingface: "https://huggingface.co/Qwen/Qwen2.5-Coder-3B-Instruct",
+      ollama: "https://ollama.com/library/qwen2.5-coder",
+    },
+  },
+  {
+    id: "qwen25-coder-7b",
+    name: "Qwen2.5 Coder",
+    params: "7B",
+    paramsB: 7,
+    benchmarks: [],
+    blurb: "Purpose-built for code completion and refactors at laptop-friendly size.",
+    tags: ["coding", "agents"],
+    quants: [
+      { quant: "Q4_K_M", fileGB: 4.7, requiredGB: 6.2 },
+      { quant: "Q8_0", fileGB: 8.1, requiredGB: 9.6 },
+    ],
+    runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    links: {
+      github: "https://github.com/QwenLM/Qwen2.5-Coder",
+      huggingface: "https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct",
+      ollama: "https://ollama.com/library/qwen2.5-coder",
+    },
+  },
+  {
+    id: "qwen25-coder-14b",
+    name: "Qwen2.5 Coder",
+    params: "14B",
+    paramsB: 14,
+    benchmarks: [],
+    blurb: "Noticeably better at multi-file reasoning than the 7B, still runs on one GPU.",
+    tags: ["coding", "agents"],
+    quants: [
+      { quant: "Q4_K_M", fileGB: 9.0, requiredGB: 10.5 },
+      { quant: "Q8_0", fileGB: 15.7, requiredGB: 18.1 },
+    ],
+    runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    links: {
+      github: "https://github.com/QwenLM/Qwen2.5-Coder",
+      huggingface: "https://huggingface.co/Qwen/Qwen2.5-Coder-14B-Instruct",
+      ollama: "https://ollama.com/library/qwen2.5-coder",
+    },
+  },
+  {
+    id: "qwen25-coder-32b",
+    name: "Qwen2.5 Coder",
+    params: "32B",
+    paramsB: 32,
+    benchmarks: [],
+    blurb: "Near frontier-level coding quality — needs a real workstation GPU or a lot of RAM.",
+    tags: ["coding", "agents"],
+    quants: [
+      { quant: "Q4_K_M", fileGB: 19.9, requiredGB: 22.9 },
+      { quant: "Q8_0", fileGB: 34.8, requiredGB: 40.0 },
+    ],
+    runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    links: {
+      github: "https://github.com/QwenLM/Qwen2.5-Coder",
+      huggingface: "https://huggingface.co/Qwen/Qwen2.5-Coder-32B-Instruct",
+      ollama: "https://ollama.com/library/qwen2.5-coder",
+    },
+  },
+
+  {
+    id: "deepseek-r1-qwen-15b",
+    name: "DeepSeek-R1 Distill (Qwen)",
+    params: "1.5B",
+    paramsB: 1.5,
+    benchmarks: [
+      { area: "research", benchmark: "GPQA Diamond", score: "33.8", note: "pass@1" },
+      { area: "coding", benchmark: "LiveCodeBench", score: "16.9", note: "pass@1" },
+    ],
+    blurb: "The smallest reasoning distill — shows its work, but least capable of the family.",
+    tags: ["research", "coding"],
+    quants: [
+      { quant: "Q4_K_M", fileGB: 1.1, requiredGB: 2.6 },
+      { quant: "Q8_0", fileGB: 1.9, requiredGB: 3.4 },
+    ],
+    runtimes: ["Ollama", "llama.cpp"],
+    links: {
+      github: "https://github.com/deepseek-ai/DeepSeek-R1",
+      huggingface: "https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+      ollama: "https://ollama.com/library/deepseek-r1",
     },
   },
   {
@@ -219,7 +393,8 @@ const MODELS = [
     blurb: "Shows its reasoning step by step — good for math and logic-heavy questions.",
     tags: ["research", "coding"],
     quants: [
-      { quant: "Q4_K_M", fileGB: 4.7, requiredGB: 6.5 },
+      { quant: "Q4_K_M", fileGB: 4.7, requiredGB: 6.2 },
+      { quant: "Q8_0", fileGB: 8.1, requiredGB: 9.6 },
     ],
     runtimes: ["Ollama", "llama.cpp"],
     links: {
@@ -240,12 +415,35 @@ const MODELS = [
     blurb: "Better reasoning depth than the 7B distill, still fits on a single mid-range GPU.",
     tags: ["research", "coding"],
     quants: [
-      { quant: "Q4_K_M", fileGB: 9.0, requiredGB: 11.5 },
+      { quant: "Q4_K_M", fileGB: 9.0, requiredGB: 10.5 },
+      { quant: "Q8_0", fileGB: 15.7, requiredGB: 18.1 },
     ],
     runtimes: ["Ollama", "llama.cpp"],
     links: {
       github: "https://github.com/deepseek-ai/DeepSeek-R1",
       huggingface: "https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
+      ollama: "https://ollama.com/library/deepseek-r1",
+    },
+  },
+  {
+    id: "deepseek-r1-qwen-32b",
+    name: "DeepSeek-R1 Distill (Qwen)",
+    params: "32B",
+    paramsB: 32,
+    benchmarks: [
+      { area: "research", benchmark: "GPQA Diamond", score: "62.1", note: "pass@1" },
+      { area: "coding", benchmark: "LiveCodeBench", score: "57.2", note: "pass@1" },
+    ],
+    blurb: "The strongest distill — outperforms OpenAI o1-mini on several reasoning benchmarks per DeepSeek's own report.",
+    tags: ["research", "coding"],
+    quants: [
+      { quant: "Q4_K_M", fileGB: 19.9, requiredGB: 22.9 },
+      { quant: "Q8_0", fileGB: 34.8, requiredGB: 40.0 },
+    ],
+    runtimes: ["Ollama", "llama.cpp"],
+    links: {
+      github: "https://github.com/deepseek-ai/DeepSeek-R1",
+      huggingface: "https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
       ollama: "https://ollama.com/library/deepseek-r1",
     },
   },
@@ -261,7 +459,8 @@ const MODELS = [
     blurb: "Reasoning-tuned distillation of Llama 3.1 — a lighter alternative to the Qwen distill.",
     tags: ["research", "coding"],
     quants: [
-      { quant: "Q4_K_M", fileGB: 4.9, requiredGB: 6.5 },
+      { quant: "Q4_K_M", fileGB: 4.9, requiredGB: 6.4 },
+      { quant: "Q8_0", fileGB: 8.5, requiredGB: 10.0 },
     ],
     runtimes: ["Ollama", "llama.cpp"],
     links: {
@@ -270,6 +469,7 @@ const MODELS = [
       ollama: "https://ollama.com/library/deepseek-r1",
     },
   },
+
   {
     id: "mistral-7b",
     name: "Mistral",
@@ -282,7 +482,8 @@ const MODELS = [
     blurb: "Dependable, well-rounded writing model with a permissive license.",
     tags: ["writing", "chat", "general"],
     quants: [
-      { quant: "Q4_K_M", fileGB: 4.4, requiredGB: 6.0 },
+      { quant: "Q4_K_M", fileGB: 4.4, requiredGB: 5.9 },
+      { quant: "Q8_0", fileGB: 7.7, requiredGB: 9.2 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
     links: {
@@ -303,7 +504,8 @@ const MODELS = [
     blurb: "Large context window and reliable function-calling — a good fit for agent workflows.",
     tags: ["agents", "writing", "general"],
     quants: [
-      { quant: "Q4_K_M", fileGB: 7.1, requiredGB: 9.0 },
+      { quant: "Q4_K_M", fileGB: 7.5, requiredGB: 9.0 },
+      { quant: "Q8_0", fileGB: 13.0, requiredGB: 15.0 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
     links: {
@@ -321,7 +523,8 @@ const MODELS = [
     blurb: "Mixture-of-experts model — needs all experts in memory even though fewer are active per token.",
     tags: ["research", "writing"],
     quants: [
-      { quant: "Q4_K_M", fileGB: 26.4, requiredGB: 30.0 },
+      { quant: "Q4_K_M", fileGB: 26.4, requiredGB: 30.4 },
+      { quant: "Q8_0", fileGB: 49.6, requiredGB: 57.0 },
     ],
     runtimes: ["Ollama", "llama.cpp"],
     links: {
@@ -330,6 +533,7 @@ const MODELS = [
       ollama: "https://ollama.com/library/mixtral",
     },
   },
+
   {
     id: "phi35-mini",
     name: "Phi-3.5 Mini",
@@ -342,13 +546,37 @@ const MODELS = [
     blurb: "Punches above its size on coding and reasoning benchmarks for its weight class.",
     tags: ["coding", "writing", "general"],
     quants: [
-      { quant: "Q4_K_M", fileGB: 2.2, requiredGB: 3.5 },
+      { quant: "Q4_K_M", fileGB: 2.4, requiredGB: 3.9 },
+      { quant: "Q8_0", fileGB: 4.1, requiredGB: 5.6 },
     ],
     runtimes: ["Ollama", "llama.cpp", "MLX"],
     links: {
       github: "https://github.com/microsoft/Phi-3CookBook",
       huggingface: "https://huggingface.co/microsoft/Phi-3.5-mini-instruct",
       ollama: "https://ollama.com/library/phi3.5",
+    },
+  },
+  {
+    id: "phi4-mini",
+    name: "Phi-4 Mini",
+    params: "3.8B",
+    paramsB: 3.8,
+    benchmarks: [
+      { area: "research", benchmark: "MMLU", score: "67.3", note: "5-shot" },
+      { area: "chat", benchmark: "Arena-Hard", score: "32.8", note: "" },
+      { area: "research", benchmark: "GPQA", score: "25.2", note: "0-shot, CoT" },
+    ],
+    blurb: "Phi-4's smallest tier — strong reasoning-per-parameter, quick on modest hardware.",
+    tags: ["writing", "general", "research", "chat"],
+    quants: [
+      { quant: "Q4_K_M", fileGB: 2.5, requiredGB: 4.0 },
+      { quant: "Q8_0", fileGB: 4.1, requiredGB: 5.6 },
+    ],
+    runtimes: ["Ollama", "llama.cpp", "MLX"],
+    links: {
+      github: "https://github.com/microsoft/Phi-3CookBook",
+      huggingface: "https://huggingface.co/microsoft/Phi-4-mini-instruct",
+      ollama: "https://ollama.com/library/phi4-mini",
     },
   },
   {
@@ -364,13 +592,34 @@ const MODELS = [
     blurb: "Trained heavily on synthetic reasoning data — strong at math and structured problems.",
     tags: ["research", "coding"],
     quants: [
-      { quant: "Q4_K_M", fileGB: 9.1, requiredGB: 11.5 },
+      { quant: "Q4_K_M", fileGB: 9.1, requiredGB: 10.6 },
+      { quant: "Q8_0", fileGB: 15.6, requiredGB: 17.9 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
     links: {
       github: "https://github.com/microsoft/Phi-3CookBook",
       huggingface: "https://huggingface.co/microsoft/phi-4",
       ollama: "https://ollama.com/library/phi4",
+    },
+  },
+
+  {
+    id: "gemma2-2b",
+    name: "Gemma 2",
+    params: "2B",
+    paramsB: 2,
+    benchmarks: [],
+    blurb: "The smallest Gemma 2 tier — fast responses for lightweight chat and writing.",
+    tags: ["writing", "chat", "general"],
+    quants: [
+      { quant: "Q4_K_M", fileGB: 1.7, requiredGB: 3.2 },
+      { quant: "Q8_0", fileGB: 2.8, requiredGB: 4.3 },
+    ],
+    runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    links: {
+      github: "https://github.com/google-deepmind/gemma",
+      huggingface: "https://huggingface.co/google/gemma-2-2b-it",
+      ollama: "https://ollama.com/library/gemma2",
     },
   },
   {
@@ -380,12 +629,13 @@ const MODELS = [
     paramsB: 9,
     benchmarks: [
       { area: "writing", benchmark: "MMLU", score: "71.3", note: "5-shot", secondary: true },
-      { area: "chat", benchmark: "Arena-Hard", score: "42", note: "", secondary: true },
+      { area: "chat", benchmark: "Arena-Hard", score: "43.7", note: "", secondary: true },
     ],
     blurb: "Well-tuned for natural conversation and everyday writing tasks.",
     tags: ["writing", "chat", "general"],
     quants: [
-      { quant: "Q4_K_M", fileGB: 5.4, requiredGB: 7.0 },
+      { quant: "Q4_K_M", fileGB: 5.8, requiredGB: 7.3 },
+      { quant: "Q8_0", fileGB: 9.8, requiredGB: 11.3 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
     links: {
@@ -400,16 +650,37 @@ const MODELS = [
     params: "27B",
     paramsB: 27,
     benchmarks: [],
-    blurb: "The larger Gemma 2 tier — better nuance for long-form writing and analysis.",
+    blurb: "The largest Gemma 2 tier — better nuance for long-form writing and analysis.",
     tags: ["writing", "research"],
     quants: [
-      { quant: "Q4_K_M", fileGB: 16.0, requiredGB: 19.0 },
+      { quant: "Q4_K_M", fileGB: 16.6, requiredGB: 19.1 },
+      { quant: "Q8_0", fileGB: 28.9, requiredGB: 33.2 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
     links: {
       github: "https://github.com/google-deepmind/gemma",
       huggingface: "https://huggingface.co/google/gemma-2-27b-it",
       ollama: "https://ollama.com/library/gemma2",
+    },
+  },
+
+  {
+    id: "codellama-7b",
+    name: "Code Llama",
+    params: "7B",
+    paramsB: 7,
+    benchmarks: [],
+    blurb: "The smallest Code Llama tier — a lightweight baseline for code completion.",
+    tags: ["coding"],
+    quants: [
+      { quant: "Q4_K_M", fileGB: 4.1, requiredGB: 5.6 },
+      { quant: "Q8_0", fileGB: 7.2, requiredGB: 8.7 },
+    ],
+    runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    links: {
+      github: "https://github.com/meta-llama/codellama",
+      huggingface: "https://huggingface.co/meta-llama/CodeLlama-7b-Instruct-hf",
+      ollama: "https://ollama.com/library/codellama",
     },
   },
   {
@@ -421,7 +692,8 @@ const MODELS = [
     blurb: "Meta's dedicated code model — a reliable, older-generation coding baseline.",
     tags: ["coding"],
     quants: [
-      { quant: "Q4_K_M", fileGB: 7.4, requiredGB: 9.5 },
+      { quant: "Q4_K_M", fileGB: 7.9, requiredGB: 9.4 },
+      { quant: "Q8_0", fileGB: 13.8, requiredGB: 15.9 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
     links: {
@@ -431,17 +703,83 @@ const MODELS = [
     },
   },
   {
+    id: "codellama-34b",
+    name: "Code Llama",
+    params: "34B",
+    paramsB: 34,
+    benchmarks: [],
+    blurb: "The largest Code Llama tier — stronger multi-file reasoning, needs a serious GPU or a lot of RAM.",
+    tags: ["coding"],
+    quants: [
+      { quant: "Q4_K_M", fileGB: 20.2, requiredGB: 23.2 },
+      { quant: "Q8_0", fileGB: 35.9, requiredGB: 41.3 },
+    ],
+    runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    links: {
+      github: "https://github.com/meta-llama/codellama",
+      huggingface: "https://huggingface.co/meta-llama/CodeLlama-34b-Instruct-hf",
+      ollama: "https://ollama.com/library/codellama",
+    },
+  },
+
+  {
+    id: "starcoder2-3b",
+    name: "StarCoder2",
+    params: "3B",
+    paramsB: 3,
+    benchmarks: [
+      { area: "coding", benchmark: "HumanEval", score: "31.7", note: "pass@1" },
+      { area: "coding", benchmark: "DS-1000", score: "25.0", note: "pass@1" },
+    ],
+    blurb: "The smallest StarCoder2 tier — fast code completion for lightweight setups.",
+    tags: ["coding"],
+    quants: [
+      { quant: "Q4_K_M", fileGB: 1.8, requiredGB: 3.3 },
+      { quant: "Q8_0", fileGB: 3.2, requiredGB: 4.7 },
+    ],
+    runtimes: ["Ollama", "llama.cpp"],
+    links: {
+      github: "https://github.com/bigcode-project/starcoder2",
+      huggingface: "https://huggingface.co/bigcode/starcoder2-3b",
+      ollama: "https://ollama.com/library/starcoder2",
+    },
+  },
+  {
+    id: "starcoder2-7b",
+    name: "StarCoder2",
+    params: "7B",
+    paramsB: 7,
+    benchmarks: [
+      { area: "coding", benchmark: "HumanEval", score: "35.4", note: "pass@1" },
+      { area: "coding", benchmark: "DS-1000", score: "27.8", note: "pass@1" },
+    ],
+    blurb: "The mid-size StarCoder2 tier — a solid balance of quality and speed.",
+    tags: ["coding"],
+    quants: [
+      { quant: "Q4_K_M", fileGB: 4.4, requiredGB: 5.9 },
+      { quant: "Q8_0", fileGB: 7.6, requiredGB: 9.1 },
+    ],
+    runtimes: ["Ollama", "llama.cpp"],
+    links: {
+      github: "https://github.com/bigcode-project/starcoder2",
+      huggingface: "https://huggingface.co/bigcode/starcoder2-7b",
+      ollama: "https://ollama.com/library/starcoder2",
+    },
+  },
+  {
     id: "starcoder2-15b",
     name: "StarCoder2",
     params: "15B",
     paramsB: 15,
     benchmarks: [
       { area: "coding", benchmark: "HumanEval", score: "46.3", note: "pass@1" },
+      { area: "coding", benchmark: "DS-1000", score: "33.8", note: "pass@1" },
     ],
     blurb: "Trained on The Stack v2 — broad language coverage across many programming languages.",
     tags: ["coding"],
     quants: [
-      { quant: "Q4_K_M", fileGB: 9.1, requiredGB: 11.5 },
+      { quant: "Q4_K_M", fileGB: 9.9, requiredGB: 11.4 },
+      { quant: "Q8_0", fileGB: 17.0, requiredGB: 19.6 },
     ],
     runtimes: ["Ollama", "llama.cpp"],
     links: {
@@ -450,6 +788,7 @@ const MODELS = [
       ollama: "https://ollama.com/library/starcoder2",
     },
   },
+
   {
     id: "llava-16-7b",
     name: "LLaVA 1.6",
@@ -459,13 +798,33 @@ const MODELS = [
     blurb: "Reads images alongside text — screenshots, diagrams, photos.",
     tags: ["vision", "general"],
     quants: [
-      { quant: "Q4_K_M", fileGB: 4.7, requiredGB: 6.5 },
+      { quant: "Q4_K_M", fileGB: 4.5, requiredGB: 6.0 },
+      { quant: "Q8_0", fileGB: 7.8, requiredGB: 9.3 },
     ],
     runtimes: ["Ollama", "llama.cpp"],
     links: {
       github: "https://github.com/haotian-liu/LLaVA",
       huggingface: "https://huggingface.co/liuhaotian/llava-v1.6-mistral-7b",
       ollama: "https://ollama.com/library/llava",
+    },
+  },
+  {
+    id: "qwen2-vl-2b",
+    name: "Qwen2-VL",
+    params: "2B",
+    paramsB: 2,
+    benchmarks: [],
+    blurb: "The smallest Qwen2-VL tier — fast image understanding for lightweight setups.",
+    tags: ["vision", "general"],
+    quants: [
+      { quant: "Q4_K_M", fileGB: 1.0, requiredGB: 2.5 },
+      { quant: "Q8_0", fileGB: 1.6, requiredGB: 3.1 },
+    ],
+    runtimes: ["Ollama", "llama.cpp"],
+    links: {
+      github: "https://github.com/QwenLM/Qwen2-VL",
+      huggingface: "https://huggingface.co/Qwen/Qwen2-VL-2B-Instruct",
+      ollama: "https://ollama.com/library/qwen2.5vl",
     },
   },
   {
@@ -480,7 +839,8 @@ const MODELS = [
     blurb: "Strong document and chart understanding in addition to general image Q&A.",
     tags: ["vision", "research"],
     quants: [
-      { quant: "Q4_K_M", fileGB: 5.0, requiredGB: 7.0 },
+      { quant: "Q4_K_M", fileGB: 4.7, requiredGB: 6.2 },
+      { quant: "Q8_0", fileGB: 8.1, requiredGB: 9.6 },
     ],
     runtimes: ["Ollama", "llama.cpp"],
     links: {
@@ -489,6 +849,7 @@ const MODELS = [
       ollama: "https://ollama.com/library/qwen2.5vl",
     },
   },
+
   {
     id: "command-r-35b",
     name: "Command R",
@@ -498,12 +859,13 @@ const MODELS = [
     blurb: "Built for retrieval-augmented generation and tool use with citation support.",
     tags: ["agents", "research"],
     quants: [
-      { quant: "Q4_K_M", fileGB: 20.0, requiredGB: 23.5 },
+      { quant: "Q4_K_M", fileGB: 21.5, requiredGB: 24.7 },
+      { quant: "Q8_0", fileGB: 37.2, requiredGB: 42.8 },
     ],
     runtimes: ["Ollama", "llama.cpp"],
     links: {
       github: "https://github.com/cohere-ai/cohere-toolkit",
-      huggingface: "https://huggingface.co/CohereForAI/c4ai-command-r-v01",
+      huggingface: "https://huggingface.co/CohereLabs/c4ai-command-r-v01",
       ollama: "https://ollama.com/library/command-r",
     },
   },
