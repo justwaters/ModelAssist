@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+  html, body {
+    margin: 0;
+    width: 1200px;
+    height: 630px;
+    overflow: hidden;
+  }
+  .card {
+    width: 1200px;
+    height: 630px;
+    box-sizing: border-box;
+    padding: 64px 72px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .card .wordmark {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 24px;
+  }
+  .card .wordmark svg { width: 30px; height: 30px; }
+  .card__main h1 {
+    font-size: 64px;
+    line-height: 1.12;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    max-width: 920px;
+    margin: 0;
+  }
+  .card__main p {
+    margin: 24px 0 0;
+    font-size: 24px;
+    color: var(--ink-muted);
+    max-width: 46ch;
+  }
+  .sample {
+    align-self: flex-start;
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    width: 560px;
+    padding: 22px 26px;
+  }
+  .sample__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .sample__head h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+  }
+  .sample__head .params {
+    font-family: var(--font-mono);
+    font-weight: 400;
+    color: var(--ink-muted);
+    font-size: 17px;
+    margin-left: 6px;
+  }
+  .sample__spec {
+    margin-top: 10px;
+    display: flex;
+    gap: 18px;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    color: var(--ink);
+  }
+  .sample__spec .spec-label {
+    font-family: var(--font-sans);
+    color: var(--ink-faint);
+    margin-right: 5px;
+  }
+  .sample .fit-gauge { margin-top: 16px; }
+  .sample .fit-gauge__track { max-width: 100%; height: 8px; }
+  .sample .fit-gauge__label { font-size: 14px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="wordmark">
+      <svg viewBox="0 0 22 22" fill="none" aria-hidden="true">
+        <path d="M1 6V1H6" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M21 6V1H16" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M1 16V21H6" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M21 16V21H16" stroke="currentColor" stroke-width="1.6"/>
+        <circle cx="11" cy="11" r="3.25" stroke="currentColor" stroke-width="1.6"/>
+      </svg>
+      <span style="color: var(--ink); font-weight: 600;">ModelAssist</span>
+    </div>
+
+    <div class="card__main">
+      <h1>Find local models that fit your machine.</h1>
+      <p>Enter your hardware and what you're using it for. Get open models that actually fit, with the runtime you need and links to download them.</p>
+    </div>
+
+    <article class="sample">
+      <div class="sample__head">
+        <h3>Qwen2.5 Coder<span class="params">14B</span></h3>
+        <div class="tags"><span class="tag">coding</span></div>
+      </div>
+      <div class="sample__spec">
+        <span><span class="spec-label">quant</span>Q4_K_M</span>
+        <span><span class="spec-label">file</span>9.0 GB</span>
+        <span><span class="spec-label">needs</span>~11.5 GB RAM</span>
+      </div>
+      <div class="fit-gauge">
+        <div class="fit-gauge__track"><div class="fit-gauge__fill" style="width:72%; background: var(--good);"></div></div>
+        <span class="fit-gauge__label">72% of your RAM — runs on GPU</span>
+      </div>
+    </article>
+  </div>
+</body>
+</html>
