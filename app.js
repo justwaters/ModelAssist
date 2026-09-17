@@ -216,8 +216,33 @@
     }
   }
 
-  function speedNote(mode) {
-    if (mode === "cpu") return "CPU only — expect slower generation";
+  // Very rough: CPU decode speed is bandwidth-bound, not compute-bound, so
+  // tokens/sec ≈ (RAM bandwidth ÷ model file size), discounted for real-world overhead.
+  const CPU_BANDWIDTH_GBPS = [
+    { pattern: /threadripper|epyc|xeon/, gbps: 110 },
+    { pattern: /ultra/, gbps: 800 },
+    { pattern: /\bmax\b/, gbps: 400 },
+    { pattern: /\bpro\b/, gbps: 150 },
+  ];
+  const CPU_REAL_WORLD_EFFICIENCY = 0.5;
+
+  function cpuBandwidthGBps() {
+    const text = (els.cpu.value || "").toLowerCase();
+    const tier = CPU_BANDWIDTH_GBPS.find((t) => t.pattern.test(text));
+    return tier ? tier.gbps : 50; // generic dual-channel desktop/laptop RAM
+  }
+
+  function estimateCpuTokensPerSec(fileGB) {
+    const effectiveGBps = cpuBandwidthGBps() * CPU_REAL_WORLD_EFFICIENCY;
+    return effectiveGBps / fileGB;
+  }
+
+  function speedNote(mode, quant) {
+    if (mode === "cpu") {
+      const tps = estimateCpuTokensPerSec(quant.fileGB);
+      const label = tps >= 10 ? Math.round(tps) : tps.toFixed(1);
+      return `CPU only — roughly ${label} tok/s`;
+    }
     if (mode === "apple-unified") return "runs on Apple Silicon GPU";
     return "runs on GPU";
   }
@@ -264,7 +289,7 @@
         ${renderBenchTable(model)}
         <div class="fit-gauge">
           <div class="fit-gauge__track"><div class="fit-gauge__fill" style="width:${pct}%"></div></div>
-          <span class="fit-gauge__label">${pct}% of your ${availableLabel} — ${speedNote(mode)}</span>
+          <span class="fit-gauge__label">${pct}% of your ${availableLabel} — ${speedNote(mode, quant)}</span>
         </div>
         <div class="runtime-row">
           <span class="runtime-label">Run it with</span>
@@ -351,7 +376,7 @@
     els.resetFilters.addEventListener("click", resetFilters);
 
     ["change", "input"].forEach((evt) => {
-      [els.os, els.gpu, els.vram, els.ram, els.disk].forEach((el) => {
+      [els.os, els.gpu, els.vram, els.ram, els.disk, els.cpu].forEach((el) => {
         el.addEventListener(evt, () => {
           if (el === els.gpu) updateGpuField();
           render();

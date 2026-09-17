@@ -64,13 +64,22 @@ button { font-family: inherit; }
 
 .wordmark {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 8px;
   font-weight: 600;
   font-size: 17px;
   letter-spacing: -0.01em;
 }
-.wordmark__mark { color: var(--accent); }
+.wordmark__mark { align-self: center; color: var(--accent); }
+
+.byline {
+  font-size: 12.5px;
+  font-weight: 400;
+  color: var(--ink-faint);
+  text-decoration: none;
+  letter-spacing: 0;
+}
+.byline:hover { color: var(--accent); }
 
 .site-header__link {
   font-size: 13.5px;
@@ -195,9 +204,11 @@ button { font-family: inherit; }
   gap: 20px;
   position: sticky;
   top: 20px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
 }
 @media (max-width: 760px) {
-  .filter-pane { position: static; }
+  .filter-pane { position: static; max-height: none; overflow-y: visible; }
 }
 
 .filter-group {
@@ -211,8 +222,19 @@ button { font-family: inherit; }
 .filter-group__title {
   font-size: 13px;
   font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 4px;
+}
+.filter-group[open] > .filter-group__title {
   margin-bottom: 10px;
 }
+.filter-group__title::marker {
+  color: var(--ink-faint);
+  font-size: 11px;
+}
+.filter-group__title:hover { color: var(--accent); }
+
 .filter-group__body {
   display: flex;
   flex-direction: column;
@@ -483,6 +505,8 @@ button { font-family: inherit; }
   margin-top: 56px;
   padding-top: 24px;
   border-top: 1px solid var(--line-strong);
+}
+.footnote__prose {
   max-width: 66ch;
 }
 .footnote__title {
@@ -497,7 +521,7 @@ button { font-family: inherit; }
 }
 
 .site-footer {
-  max-width: 880px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 0 24px 40px;
   color: var(--ink-faint);

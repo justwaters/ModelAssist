@@ -45,6 +45,7 @@
         <circle cx="11" cy="11" r="3.25" stroke="currentColor" stroke-width="1.6"/>
       </svg>
       <span>ModelAssist</span>
+      <a class="byline" href="https://justin.1waters.com" target="_blank" rel="noopener">by justwaters</a>
     </div>
     <a class="site-header__link" href="#how-it-works">How the fit is calculated</a>
   </header>
@@ -96,7 +97,7 @@
         </label>
 
         <label class="field">
-          <span class="field__label">CPU <em>(reference only)</em></span>
+          <span class="field__label">CPU <em>(used for CPU-only speed)</em></span>
           <input class="field__input" type="text" id="cpu" placeholder="e.g. Apple M3 Pro" />
         </label>
       </div>
@@ -106,30 +107,30 @@
 
     <div class="layout">
       <aside class="filter-pane" aria-label="Sort and filter results">
-        <div class="filter-group">
-          <h3 class="filter-group__title">Sort by</h3>
+        <details class="filter-group">
+          <summary class="filter-group__title">Sort by</summary>
           <div class="filter-group__body" id="sort-options"></div>
-        </div>
+        </details>
 
-        <div class="filter-group">
-          <h3 class="filter-group__title">Use case</h3>
+        <details class="filter-group">
+          <summary class="filter-group__title">Use case</summary>
           <div class="filter-group__body" id="usecase-filters"></div>
-        </div>
+        </details>
 
-        <div class="filter-group">
-          <h3 class="filter-group__title">Runtime</h3>
+        <details class="filter-group">
+          <summary class="filter-group__title">Runtime</summary>
           <div class="filter-group__body" id="runtime-filters"></div>
-        </div>
+        </details>
 
-        <div class="filter-group">
-          <h3 class="filter-group__title">Fit</h3>
+        <details class="filter-group">
+          <summary class="filter-group__title">Fit</summary>
           <div class="filter-group__body">
             <label class="filter-check">
               <input type="checkbox" id="show-tight" checked />
               <span>Include tight fits</span>
             </label>
           </div>
-        </div>
+        </details>
 
         <button type="button" class="reset-filters" id="reset-filters">Reset filters</button>
       </aside>
@@ -149,11 +150,14 @@
     </div>
 
     <section class="footnote" id="how-it-works">
-      <h2 class="footnote__title">How the fit — and the benchmarks — are calculated</h2>
-      <p>If you have a dedicated GPU, we check the model against your VRAM first — that's what determines whether it runs at real-time speed. On Apple Silicon, RAM and GPU memory are the same pool, so we reserve about 4&nbsp;GB for the system and use the rest. With no dedicated GPU, models run on your CPU using system RAM, which works but is considerably slower.</p>
-      <p>Sizes shown are for the GGUF quantization listed, plus the memory a runtime typically needs on top for context and overhead. Actual usage varies with context length and settings — treat these as planning numbers, not guarantees.</p>
-      <p>Benchmark scores come from each model's own Hugging Face model card, next to the area they measure. Scores marked <sup>†</sup> are cited in another model's own published comparison table rather than the source model's card — usually because the source card links out to a blog post instead of publishing numbers directly. Not every model has a published score for every area it's tagged for; we show what's actually published rather than estimate.</p>
-      <p>None of the runtimes below use a Neural Processing Unit (NPU) for LLM inference yet, including Apple's Neural Engine. NPUs accelerate other on-device AI tasks today, but the model formats here run on CPU or GPU.</p>
+      <div class="footnote__prose">
+        <h2 class="footnote__title">How the fit — and the benchmarks — are calculated</h2>
+        <p>If you have a dedicated GPU, we check the model against your VRAM first — that's what determines whether it runs at real-time speed. On Apple Silicon, RAM and GPU memory are the same pool, so we reserve about 4&nbsp;GB for the system and use the rest. With no dedicated GPU, models run on your CPU using system RAM, which works but is considerably slower.</p>
+        <p>Sizes shown are for the GGUF quantization listed, plus the memory a runtime typically needs on top for context and overhead. Actual usage varies with context length and settings — treat these as planning numbers, not guarantees.</p>
+        <p>In CPU-only mode, the tokens-per-second number is a rough estimate, not a benchmark. Decoding on a CPU is mostly limited by memory bandwidth, not raw compute, so we estimate speed as roughly (your RAM bandwidth ÷ the model's file size), halved to account for real-world overhead. We guess bandwidth from the CPU name you enter — a workstation-class chip (Threadripper, EPYC, Xeon) or an Apple Pro/Max/Ultra tier both point to a wider memory bus than a typical consumer chip. Leave the field blank and we assume a generic dual-channel setup.</p>
+        <p>Benchmark scores come from each model's own Hugging Face model card, next to the area they measure. Scores marked <sup>†</sup> are cited in another model's own published comparison table rather than the source model's card — usually because the source card links out to a blog post instead of publishing numbers directly. Not every model has a published score for every area it's tagged for; we show what's actually published rather than estimate.</p>
+        <p>None of the runtimes below use a Neural Processing Unit (NPU) for LLM inference yet, including Apple's Neural Engine. NPUs accelerate other on-device AI tasks today, but the model formats here run on CPU or GPU.</p>
+      </div>
     </section>
 
   </main>
