@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ModelAssist — find local models that fit your machine</title>
+<meta name="description" content="Enter your hardware and what you want to do with it. Get a list of open local models that will actually fit, with the runtime you need and links to get them." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div class="page">
+
+  <header class="site-header">
+    <div class="wordmark">
+      <svg class="wordmark__mark" width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+        <path d="M1 6V1H6" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M21 6V1H16" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M1 16V21H6" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M21 16V21H16" stroke="currentColor" stroke-width="1.6"/>
+        <circle cx="11" cy="11" r="3.25" stroke="currentColor" stroke-width="1.6"/>
+      </svg>
+      <span>ModelAssist</span>
+    </div>
+    <a class="site-header__link" href="#how-it-works">How the fit is calculated</a>
+  </header>
+
+  <main>
+
+    <section class="intro">
+      <h1>Tell us what you're running. We'll tell you which local models actually fit.</h1>
+      <p class="intro__sub">Every result below is checked against your memory, disk space, and what you're using it for — no guesswork about whether a download will actually run.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="machine-heading">
+      <h2 id="machine-heading" class="panel__title"><span class="panel__tick"></span>Your machine</h2>
+
+      <div class="field-grid">
+        <label class="field">
+          <span class="field__label">Operating system</span>
+          <select id="os" class="field__input">
+            <option value="macos">macOS</option>
+            <option value="windows">Windows</option>
+            <option value="linux">Linux</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span class="field__label">Graphics</span>
+          <select id="gpu" class="field__input">
+            <option value="apple">Apple Silicon (unified memory)</option>
+            <option value="nvidia">NVIDIA</option>
+            <option value="amd">AMD</option>
+            <option value="intel">Intel Arc</option>
+            <option value="none">None — CPU only</option>
+          </select>
+        </label>
+
+        <label class="field" id="vram-field">
+          <span class="field__label">VRAM (GB)</span>
+          <input class="field__input field__input--mono" type="number" id="vram" min="0" step="1" value="12" />
+        </label>
+
+        <label class="field">
+          <span class="field__label">System RAM (GB)</span>
+          <input class="field__input field__input--mono" type="number" id="ram" min="1" step="1" value="16" />
+        </label>
+
+        <label class="field">
+          <span class="field__label">Free disk space (GB)</span>
+          <input class="field__input field__input--mono" type="number" id="disk" min="0" step="1" value="200" />
+        </label>
+
+        <label class="field">
+          <span class="field__label">CPU <em>(reference only)</em></span>
+          <input class="field__input" type="text" id="cpu" placeholder="e.g. Apple M3 Pro" />
+        </label>
+      </div>
+
+      <p class="npu-note" id="npu-note"></p>
+    </section>
+
+    <section class="panel" aria-labelledby="usecase-heading">
+      <h2 id="usecase-heading" class="panel__title"><span class="panel__tick"></span>What you'll use it for</h2>
+      <p class="panel__hint">Pick as many as apply. Leave all unselected to see everything that fits.</p>
+      <div class="chip-row" id="usecase-chips" role="group" aria-label="Use cases"></div>
+    </section>
+
+    <section class="results" aria-labelledby="results-heading">
+      <div class="results__header">
+        <h2 id="results-heading" class="results__count"></h2>
+      </div>
+
+      <div id="results-list" class="results-list"></div>
+
+      <details class="excluded" id="excluded-wrap" hidden>
+        <summary id="excluded-summary"></summary>
+        <div id="excluded-list" class="excluded-list"></div>
+      </details>
+    </section>
+
+    <section class="footnote" id="how-it-works">
+      <h2 class="footnote__title">How the fit is calculated</h2>
+      <p>If you have a dedicated GPU, we check the model against your VRAM first — that's what determines whether it runs at real-time speed. On Apple Silicon, RAM and GPU memory are the same pool, so we reserve about 4&nbsp;GB for the system and use the rest. With no dedicated GPU, models run on your CPU using system RAM, which works but is considerably slower.</p>
+      <p>Sizes shown are for the GGUF quantization listed, plus the memory a runtime typically needs on top for context and overhead. Actual usage varies with context length and settings — treat these as planning numbers, not guarantees.</p>
+      <p>None of the runtimes below use a Neural Processing Unit (NPU) for LLM inference yet, including Apple's Neural Engine. NPUs accelerate other on-device AI tasks today, but the model formats here run on CPU or GPU.</p>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>Model sizes and requirements are estimates. Always check a model's own page before downloading.</p>
+  </footer>
+
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
