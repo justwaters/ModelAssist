@@ -104,24 +104,49 @@
       <p class="npu-note" id="npu-note"></p>
     </section>
 
-    <section class="panel" aria-labelledby="usecase-heading">
-      <h2 id="usecase-heading" class="panel__title"><span class="panel__tick"></span>What you'll use it for</h2>
-      <p class="panel__hint">Pick as many as apply. Leave all unselected to see everything that fits.</p>
-      <div class="chip-row" id="usecase-chips" role="group" aria-label="Use cases"></div>
-    </section>
+    <div class="layout">
+      <aside class="filter-pane" aria-label="Sort and filter results">
+        <div class="filter-group">
+          <h3 class="filter-group__title">Sort by</h3>
+          <div class="filter-group__body" id="sort-options"></div>
+        </div>
 
-    <section class="results" aria-labelledby="results-heading">
-      <div class="results__header">
-        <h2 id="results-heading" class="results__count"></h2>
-      </div>
+        <div class="filter-group">
+          <h3 class="filter-group__title">Use case</h3>
+          <div class="filter-group__body" id="usecase-filters"></div>
+        </div>
 
-      <div id="results-list" class="results-list"></div>
+        <div class="filter-group">
+          <h3 class="filter-group__title">Runtime</h3>
+          <div class="filter-group__body" id="runtime-filters"></div>
+        </div>
 
-      <details class="excluded" id="excluded-wrap" hidden>
-        <summary id="excluded-summary"></summary>
-        <div id="excluded-list" class="excluded-list"></div>
-      </details>
-    </section>
+        <div class="filter-group">
+          <h3 class="filter-group__title">Fit</h3>
+          <div class="filter-group__body">
+            <label class="filter-check">
+              <input type="checkbox" id="show-tight" checked />
+              <span>Include tight fits</span>
+            </label>
+          </div>
+        </div>
+
+        <button type="button" class="reset-filters" id="reset-filters">Reset filters</button>
+      </aside>
+
+      <section class="results" aria-labelledby="results-heading">
+        <div class="results__header">
+          <h2 id="results-heading" class="results__count"></h2>
+        </div>
+
+        <div id="results-list" class="results-list"></div>
+
+        <details class="excluded" id="excluded-wrap" hidden>
+          <summary id="excluded-summary"></summary>
+          <div id="excluded-list" class="excluded-list"></div>
+        </details>
+      </section>
+    </div>
 
     <section class="footnote" id="how-it-works">
       <h2 class="footnote__title">How the fit — and the benchmarks — are calculated</h2>

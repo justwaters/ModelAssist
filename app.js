@@ -8,40 +8,96 @@
     disk: document.getElementById("disk"),
     cpu: document.getElementById("cpu"),
     npuNote: document.getElementById("npu-note"),
-    chips: document.getElementById("usecase-chips"),
-    count: document.getElementById("results-count") || document.getElementById("results-heading"),
+    sortOptions: document.getElementById("sort-options"),
+    usecaseFilters: document.getElementById("usecase-filters"),
+    runtimeFilters: document.getElementById("runtime-filters"),
+    showTight: document.getElementById("show-tight"),
+    resetFilters: document.getElementById("reset-filters"),
     list: document.getElementById("results-list"),
     excludedWrap: document.getElementById("excluded-wrap"),
     excludedSummary: document.getElementById("excluded-summary"),
     excludedList: document.getElementById("excluded-list"),
   };
 
+  const SORT_OPTIONS = [
+    { id: "best", label: "Best fit for your machine" },
+    { id: "headroom", label: "Most memory headroom" },
+    { id: "smallest", label: "Smallest download" },
+    { id: "largest", label: "Largest & most capable" },
+    { id: "name", label: "Name (A–Z)" },
+  ];
+
+  const ALL_RUNTIMES = [...new Set(MODELS.flatMap((m) => m.runtimes))];
+
   const state = {
+    sort: "best",
     selectedTags: new Set(),
+    selectedRuntimes: new Set(ALL_RUNTIMES),
   };
 
   const EXTERNAL_ICON = `<svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M4 2H2v8h8V8" stroke="currentColor" stroke-width="1.2"/><path d="M6.5 1.5H10.5V5.5" stroke="currentColor" stroke-width="1.2"/><path d="M10.3 1.7 5.5 6.5" stroke="currentColor" stroke-width="1.2"/></svg>`;
 
-  function buildChips() {
-    els.chips.innerHTML = "";
-    USE_CASES.forEach((uc) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "chip";
-      btn.textContent = uc.label;
-      btn.setAttribute("aria-pressed", "false");
-      btn.addEventListener("click", () => {
-        if (state.selectedTags.has(uc.id)) {
-          state.selectedTags.delete(uc.id);
-          btn.setAttribute("aria-pressed", "false");
-        } else {
-          state.selectedTags.add(uc.id);
-          btn.setAttribute("aria-pressed", "true");
-        }
+  function buildSortOptions() {
+    els.sortOptions.innerHTML = "";
+    SORT_OPTIONS.forEach((opt, i) => {
+      const label = document.createElement("label");
+      label.className = "filter-radio";
+      label.innerHTML = `<input type="radio" name="sort" value="${opt.id}" ${i === 0 ? "checked" : ""} /><span>${opt.label}</span>`;
+      label.querySelector("input").addEventListener("change", () => {
+        state.sort = opt.id;
         render();
       });
-      els.chips.appendChild(btn);
+      els.sortOptions.appendChild(label);
     });
+  }
+
+  function buildUseCaseFilters() {
+    els.usecaseFilters.innerHTML = "";
+    USE_CASES.forEach((uc) => {
+      const label = document.createElement("label");
+      label.className = "filter-check";
+      label.innerHTML = `<input type="checkbox" value="${uc.id}" /><span>${uc.label}</span>`;
+      label.querySelector("input").addEventListener("change", (e) => {
+        if (e.target.checked) state.selectedTags.add(uc.id);
+        else state.selectedTags.delete(uc.id);
+        render();
+      });
+      els.usecaseFilters.appendChild(label);
+    });
+  }
+
+  function buildRuntimeFilters() {
+    els.runtimeFilters.innerHTML = "";
+    ALL_RUNTIMES.forEach((rt) => {
+      const label = document.createElement("label");
+      label.className = "filter-check";
+      label.innerHTML = `<input type="checkbox" value="${rt}" checked /><span>${rt}</span>`;
+      label.querySelector("input").addEventListener("change", (e) => {
+        if (e.target.checked) state.selectedRuntimes.add(rt);
+        else state.selectedRuntimes.delete(rt);
+        render();
+      });
+      els.runtimeFilters.appendChild(label);
+    });
+  }
+
+  function resetFilters() {
+    state.sort = "best";
+    state.selectedTags = new Set();
+    state.selectedRuntimes = new Set(ALL_RUNTIMES);
+
+    els.sortOptions.querySelectorAll("input").forEach((input, i) => {
+      input.checked = i === 0;
+    });
+    els.usecaseFilters.querySelectorAll("input").forEach((input) => {
+      input.checked = false;
+    });
+    els.runtimeFilters.querySelectorAll("input").forEach((input) => {
+      input.checked = true;
+    });
+    els.showTight.checked = true;
+
+    render();
   }
 
   function updateGpuField() {
@@ -92,6 +148,9 @@
     if (selectedTags.size > 0 && !model.tags.some((t) => selectedTags.has(t))) {
       return null; // filtered out by use case
     }
+    if (state.selectedRuntimes.size > 0 && !model.runtimes.some((r) => state.selectedRuntimes.has(r))) {
+      return null; // filtered out by runtime
+    }
 
     // Try quants from largest file to smallest; pick the biggest one that fits.
     const sorted = [...model.quants].sort((a, b) => b.fileGB - a.fileGB);
@@ -109,6 +168,9 @@
     if (best) {
       const ratio = best.requiredGB / availability.effectiveGB;
       const status = ratio <= 0.75 ? "good" : "tight";
+      if (status === "tight" && els.showTight && !els.showTight.checked) {
+        return null; // filtered out by fit-comfort setting
+      }
       return {
         model,
         quant: best,
@@ -132,6 +194,26 @@
       missingGB: memGap > 0 ? memGap : diskGap,
       missingKind: memGap > 0 ? "memory" : "disk",
     };
+  }
+
+  function sortFitting(fitting) {
+    const sorted = fitting.slice();
+    switch (state.sort) {
+      case "headroom":
+        return sorted.sort((a, b) => a.ratio - b.ratio);
+      case "smallest":
+        return sorted.sort((a, b) => a.quant.fileGB - b.quant.fileGB);
+      case "largest":
+        return sorted.sort((a, b) => b.model.paramsB - a.model.paramsB);
+      case "name":
+        return sorted.sort((a, b) => a.model.name.localeCompare(b.model.name) || a.model.paramsB - b.model.paramsB);
+      case "best":
+      default:
+        return sorted.sort((a, b) => {
+          if (a.status !== b.status) return a.status === "good" ? -1 : 1;
+          return b.model.paramsB - a.model.paramsB;
+        });
+    }
   }
 
   function speedNote(mode) {
@@ -227,25 +309,22 @@
       }
     });
 
-    fitting.sort((a, b) => {
-      if (a.status !== b.status) return a.status === "good" ? -1 : 1;
-      return b.model.paramsB - a.model.paramsB;
-    });
+    const sortedFitting = sortFitting(fitting);
 
     els.list.innerHTML = "";
 
-    if (fitting.length === 0) {
+    if (sortedFitting.length === 0) {
       const empty = document.createElement("div");
       empty.className = "empty-state";
-      empty.innerHTML = `<strong>Nothing here fits comfortably yet.</strong> Try a smaller use case, or free up memory — even 8&nbsp;GB opens up a few strong 3B–7B models.`;
+      empty.innerHTML = `<strong>Nothing here fits comfortably yet.</strong> Try loosening a filter, or free up memory — even 8&nbsp;GB opens up a few strong 3B–7B models.`;
       els.list.appendChild(empty);
     } else {
-      fitting.forEach((r) => els.list.appendChild(renderModelRow(r)));
+      sortedFitting.forEach((r) => els.list.appendChild(renderModelRow(r)));
     }
 
     const heading = document.getElementById("results-heading");
-    if (fitting.length > 0) {
-      heading.textContent = `${fitting.length} model${fitting.length === 1 ? "" : "s"} fit your machine`;
+    if (sortedFitting.length > 0) {
+      heading.textContent = `${sortedFitting.length} model${sortedFitting.length === 1 ? "" : "s"} fit your machine`;
     } else {
       heading.textContent = "No models fit yet";
     }
@@ -262,9 +341,14 @@
   }
 
   function init() {
-    buildChips();
+    buildSortOptions();
+    buildUseCaseFilters();
+    buildRuntimeFilters();
     updateGpuField();
     render();
+
+    els.showTight.addEventListener("change", render);
+    els.resetFilters.addEventListener("click", resetFilters);
 
     ["change", "input"].forEach((evt) => {
       [els.os, els.gpu, els.vram, els.ram, els.disk].forEach((el) => {
