@@ -103,9 +103,10 @@
     </section>
 
     <section class="footnote" id="how-it-works">
-      <h2 class="footnote__title">How the fit is calculated</h2>
+      <h2 class="footnote__title">How the fit — and the benchmarks — are calculated</h2>
       <p>If you have a dedicated GPU, we check the model against your VRAM first — that's what determines whether it runs at real-time speed. On Apple Silicon, RAM and GPU memory are the same pool, so we reserve about 4&nbsp;GB for the system and use the rest. With no dedicated GPU, models run on your CPU using system RAM, which works but is considerably slower.</p>
       <p>Sizes shown are for the GGUF quantization listed, plus the memory a runtime typically needs on top for context and overhead. Actual usage varies with context length and settings — treat these as planning numbers, not guarantees.</p>
+      <p>Benchmark scores come from each model's own Hugging Face model card, next to the area they measure. Scores marked <sup>†</sup> are cited in another model's own published comparison table rather than the source model's card — usually because the source card links out to a blog post instead of publishing numbers directly. Not every model has a published score for every area it's tagged for; we show what's actually published rather than estimate.</p>
       <p>None of the runtimes below use a Neural Processing Unit (NPU) for LLM inference yet, including Apple's Neural Engine. NPUs accelerate other on-device AI tasks today, but the model formats here run on CPU or GPU.</p>
     </section>
 

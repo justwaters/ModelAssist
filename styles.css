@@ -314,6 +314,11 @@ button { font-family: inherit; }
 .bench-row--match .bench-row__area {
   color: var(--accent);
 }
+.bench-row__flag {
+  color: var(--warn);
+  margin-left: 1px;
+  cursor: help;
+}
 
 .fit-gauge {
   margin-top: 12px;

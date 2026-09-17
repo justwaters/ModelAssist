@@ -151,7 +151,7 @@
           <div class="bench-row${isMatch ? " bench-row--match" : ""}">
             <span class="bench-row__area">${b.area}</span>
             <span class="bench-row__name">${b.benchmark}</span>
-            <span class="bench-row__score">${b.score}${b.note ? `<span class="bench-row__note">${b.note}</span>` : ""}</span>
+            <span class="bench-row__score">${b.score}${b.secondary ? '<sup class="bench-row__flag" title="From another model’s published comparison table, not this model’s own card">†</sup>' : ""}${b.note ? `<span class="bench-row__note">${b.note}</span>` : ""}</span>
           </div>`;
       })
       .join("");
