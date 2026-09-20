@@ -10,6 +10,7 @@
     npuNote: document.getElementById("npu-note"),
     sortOptions: document.getElementById("sort-options"),
     usecaseFilters: document.getElementById("usecase-filters"),
+    familyFilters: document.getElementById("family-filters"),
     runtimeFilters: document.getElementById("runtime-filters"),
     showTight: document.getElementById("show-tight"),
     resetFilters: document.getElementById("reset-filters"),
@@ -37,11 +38,13 @@
   ];
 
   const ALL_RUNTIMES = [...new Set(MODELS.flatMap((m) => m.runtimes))];
+  const ALL_FAMILIES = [...new Set(MODELS.map((m) => m.name))].sort((a, b) => a.localeCompare(b));
 
   const state = {
     sort: "best",
     selectedTags: new Set(),
     selectedRuntimes: new Set(ALL_RUNTIMES),
+    selectedFamilies: new Set(ALL_FAMILIES),
     compareSet: new Set(),
   };
 
@@ -76,6 +79,21 @@
     });
   }
 
+  function buildFamilyFilters() {
+    els.familyFilters.innerHTML = "";
+    ALL_FAMILIES.forEach((name) => {
+      const label = document.createElement("label");
+      label.className = "filter-check";
+      label.innerHTML = `<input type="checkbox" value="${name}" checked /><span>${name}</span>`;
+      label.querySelector("input").addEventListener("change", (e) => {
+        if (e.target.checked) state.selectedFamilies.add(name);
+        else state.selectedFamilies.delete(name);
+        render();
+      });
+      els.familyFilters.appendChild(label);
+    });
+  }
+
   function buildRuntimeFilters() {
     els.runtimeFilters.innerHTML = "";
     ALL_RUNTIMES.forEach((rt) => {
@@ -95,12 +113,16 @@
     state.sort = "best";
     state.selectedTags = new Set();
     state.selectedRuntimes = new Set(ALL_RUNTIMES);
+    state.selectedFamilies = new Set(ALL_FAMILIES);
 
     els.sortOptions.querySelectorAll("input").forEach((input, i) => {
       input.checked = i === 0;
     });
     els.usecaseFilters.querySelectorAll("input").forEach((input) => {
       input.checked = false;
+    });
+    els.familyFilters.querySelectorAll("input").forEach((input) => {
+      input.checked = true;
     });
     els.runtimeFilters.querySelectorAll("input").forEach((input) => {
       input.checked = true;
@@ -207,6 +229,9 @@
     }
     if (state.selectedRuntimes.size > 0 && !model.runtimes.some((r) => state.selectedRuntimes.has(r))) {
       return null; // filtered out by runtime
+    }
+    if (state.selectedFamilies.size > 0 && !state.selectedFamilies.has(model.name)) {
+      return null; // filtered out by family
     }
     const fit = computeFit(model, availability, diskGB);
     if (fit.status === "tight" && els.showTight && !els.showTight.checked) {
@@ -551,6 +576,7 @@
   function init() {
     buildSortOptions();
     buildUseCaseFilters();
+    buildFamilyFilters();
     buildRuntimeFilters();
     updateGpuField();
     render();
