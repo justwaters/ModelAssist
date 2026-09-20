@@ -336,7 +336,7 @@
         <div class="links-row">
           <a href="${model.links.github}" target="_blank" rel="noopener">GitHub ${EXTERNAL_ICON}</a>
           <a href="${model.links.huggingface}" target="_blank" rel="noopener">Hugging Face ${EXTERNAL_ICON}</a>
-          <a href="${model.links.ollama}" target="_blank" rel="noopener">Ollama library ${EXTERNAL_ICON}</a>
+          ${model.links.ollama ? `<a href="${model.links.ollama}" target="_blank" rel="noopener">Ollama library ${EXTERNAL_ICON}</a>` : ""}
         </div>
       </div>
     `;
@@ -468,7 +468,7 @@
       `<div class="compare-links">
         <a href="${m.links.github}" target="_blank" rel="noopener">GitHub ${EXTERNAL_ICON}</a>
         <a href="${m.links.huggingface}" target="_blank" rel="noopener">Hugging Face ${EXTERNAL_ICON}</a>
-        <a href="${m.links.ollama}" target="_blank" rel="noopener">Ollama library ${EXTERNAL_ICON}</a>
+        ${m.links.ollama ? `<a href="${m.links.ollama}" target="_blank" rel="noopener">Ollama library ${EXTERNAL_ICON}</a>` : ""}
       </div>`;
 
     return `
