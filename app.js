@@ -13,6 +13,7 @@
     familyFilters: document.getElementById("family-filters"),
     runtimeFilters: document.getElementById("runtime-filters"),
     showTight: document.getElementById("show-tight"),
+    disableSystemReserve: document.getElementById("disable-system-reserve"),
     resetFilters: document.getElementById("reset-filters"),
     list: document.getElementById("results-list"),
     excludedWrap: document.getElementById("excluded-wrap"),
@@ -133,6 +134,7 @@
       input.checked = true;
     });
     els.showTight.checked = true;
+    els.disableSystemReserve.checked = false;
 
     render();
   }
@@ -164,10 +166,11 @@
     const gpu = els.gpu.value;
     const ram = parseFloat(els.ram.value) || 0;
     const vram = parseFloat(els.vram.value) || 0;
-    const cpuFallbackGB = Math.max(ram - 4, 0);
+    const reserve = els.disableSystemReserve.checked ? 0 : 4;
+    const cpuFallbackGB = Math.max(ram - reserve, 0);
 
     if (gpu === "apple") {
-      return { effectiveGB: Math.max(ram - 4, 0), mode: "apple-unified", cpuFallbackGB: Math.max(ram - 4, 0) };
+      return { effectiveGB: Math.max(ram - reserve, 0), mode: "apple-unified", cpuFallbackGB: Math.max(ram - reserve, 0) };
     }
     if (gpu === "none") {
       return { effectiveGB: cpuFallbackGB, mode: "cpu", cpuFallbackGB };
@@ -471,7 +474,8 @@
       (ALL_FAMILIES.length - state.selectedFamilies.size) +
       (ALL_RUNTIMES.length - state.selectedRuntimes.size) +
       (state.sort !== "best" ? 1 : 0) +
-      (els.showTight && !els.showTight.checked ? 1 : 0);
+      (els.showTight && !els.showTight.checked ? 1 : 0) +
+      (els.disableSystemReserve && els.disableSystemReserve.checked ? 1 : 0);
     els.mobileFilterBadge.hidden = activeCount === 0;
     els.mobileFilterBadge.textContent = activeCount;
   }
@@ -625,6 +629,7 @@
     render();
 
     els.showTight.addEventListener("change", render);
+    els.disableSystemReserve.addEventListener("change", render);
     els.resetFilters.addEventListener("click", resetFilters);
 
     els.compareClear.addEventListener("click", () => {
