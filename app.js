@@ -17,7 +17,16 @@
     excludedWrap: document.getElementById("excluded-wrap"),
     excludedSummary: document.getElementById("excluded-summary"),
     excludedList: document.getElementById("excluded-list"),
+    compareTray: document.getElementById("compare-tray"),
+    compareTrayItems: document.getElementById("compare-tray-items"),
+    compareClear: document.getElementById("compare-clear"),
+    compareOpen: document.getElementById("compare-open"),
+    compareOverlay: document.getElementById("compare-overlay"),
+    compareClose: document.getElementById("compare-close"),
+    compareBody: document.getElementById("compare-body"),
   };
+
+  const MAX_COMPARE = 4;
 
   const SORT_OPTIONS = [
     { id: "best", label: "Best fit for your machine" },
@@ -33,6 +42,7 @@
     sort: "best",
     selectedTags: new Set(),
     selectedRuntimes: new Set(ALL_RUNTIMES),
+    compareSet: new Set(),
   };
 
   const EXTERNAL_ICON = `<svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M4 2H2v8h8V8" stroke="currentColor" stroke-width="1.2"/><path d="M6.5 1.5H10.5V5.5" stroke="currentColor" stroke-width="1.2"/><path d="M10.3 1.7 5.5 6.5" stroke="currentColor" stroke-width="1.2"/></svg>`;
@@ -143,15 +153,10 @@
     return state.selectedTags;
   }
 
-  function evaluate(model, availability, diskGB) {
-    const selectedTags = pickTags();
-    if (selectedTags.size > 0 && !model.tags.some((t) => selectedTags.has(t))) {
-      return null; // filtered out by use case
-    }
-    if (state.selectedRuntimes.size > 0 && !model.runtimes.some((r) => state.selectedRuntimes.has(r))) {
-      return null; // filtered out by runtime
-    }
-
+  // Pure fit computation — no use-case/runtime/tight-fit filtering. Used by both the
+  // filtered results list (via evaluate()) and the compare view, which ignores filters
+  // since a model added to compare should always show its real fit.
+  function computeFit(model, availability, diskGB) {
     // Try quants from largest file to smallest; pick the biggest one that fits.
     const sorted = [...model.quants].sort((a, b) => b.fileGB - a.fileGB);
     let best = null;
@@ -168,9 +173,6 @@
     if (best) {
       const ratio = best.requiredGB / availability.effectiveGB;
       const status = ratio <= 0.75 ? "good" : "tight";
-      if (status === "tight" && els.showTight && !els.showTight.checked) {
-        return null; // filtered out by fit-comfort setting
-      }
       return {
         model,
         quant: best,
@@ -194,6 +196,23 @@
       missingGB: memGap > 0 ? memGap : diskGap,
       missingKind: memGap > 0 ? "memory" : "disk",
     };
+  }
+
+  // Applies use-case/runtime/tight-fit filters on top of computeFit() — used for the
+  // main results list. The compare view calls computeFit() directly, bypassing filters.
+  function evaluate(model, availability, diskGB) {
+    const selectedTags = pickTags();
+    if (selectedTags.size > 0 && !model.tags.some((t) => selectedTags.has(t))) {
+      return null; // filtered out by use case
+    }
+    if (state.selectedRuntimes.size > 0 && !model.runtimes.some((r) => state.selectedRuntimes.has(r))) {
+      return null; // filtered out by runtime
+    }
+    const fit = computeFit(model, availability, diskGB);
+    if (fit.status === "tight" && els.showTight && !els.showTight.checked) {
+      return null; // filtered out by fit-comfort setting
+    }
+    return fit;
   }
 
   function sortFitting(fitting) {
@@ -247,6 +266,12 @@
     return "runs on GPU";
   }
 
+  function formatContext(tokens) {
+    if (!tokens) return "—";
+    if (tokens % 1024 === 0) return `${tokens / 1024}K tokens`;
+    return `${Math.round(tokens / 1000)}K tokens`;
+  }
+
   function renderBenchTable(model) {
     const benchmarks = model.benchmarks || [];
     if (benchmarks.length === 0) return "";
@@ -267,6 +292,9 @@
     const { model, quant, ratio, status, mode } = result;
     const pct = Math.min(Math.round(ratio * 100), 100);
     const availableLabel = mode === "cpu" || mode === "apple-unified" ? "RAM" : "VRAM";
+    const isCompared = state.compareSet.has(model.id);
+    const compareDisabled = !isCompared && state.compareSet.size >= MAX_COMPARE;
+    const installCmd = model.ollamaTag ? `ollama pull ${model.ollamaTag}` : "";
 
     const row = document.createElement("article");
     row.className = `model-row model-row--${status}`;
@@ -276,13 +304,20 @@
       <div class="model-row__body">
         <div class="model-row__head">
           <h3>${model.name}<span class="params">${model.params}</span></h3>
-          <div class="tags">${model.tags.map((t) => `<span class="tag">${t}</span>`).join("")}</div>
+          <div class="model-row__meta">
+            <div class="tags">${model.tags.map((t) => `<span class="tag">${t}</span>`).join("")}</div>
+            <label class="compare-toggle">
+              <input type="checkbox" data-compare-id="${model.id}" ${isCompared ? "checked" : ""} ${compareDisabled ? "disabled" : ""} />
+              <span>Compare</span>
+            </label>
+          </div>
         </div>
         <p class="model-row__blurb">${model.blurb}</p>
         <div class="model-row__spec">
           <span><span class="spec-label">quant</span>${quant.quant}</span>
           <span><span class="spec-label">file</span>${quant.fileGB.toFixed(1)} GB</span>
           <span><span class="spec-label">needs</span>~${quant.requiredGB.toFixed(1)} GB ${availableLabel}</span>
+          <span><span class="spec-label">context</span>${formatContext(model.context)}</span>
         </div>
         ${renderBenchTable(model)}
         <div class="fit-gauge">
@@ -293,6 +328,11 @@
           <span class="runtime-label">Run it with</span>
           ${model.runtimes.map((r) => `<span class="pill">${r}</span>`).join("")}
         </div>
+        ${installCmd ? `
+        <div class="install-row">
+          <code class="install-cmd">${installCmd}</code>
+          <button type="button" class="copy-btn" data-copy="${installCmd}">Copy</button>
+        </div>` : ""}
         <div class="links-row">
           <a href="${model.links.github}" target="_blank" rel="noopener">GitHub ${EXTERNAL_ICON}</a>
           <a href="${model.links.huggingface}" target="_blank" rel="noopener">Hugging Face ${EXTERNAL_ICON}</a>
@@ -300,7 +340,152 @@
         </div>
       </div>
     `;
+
+    row.querySelector("[data-compare-id]").addEventListener("change", (e) => {
+      toggleCompare(model.id, e.target.checked);
+    });
+
+    const copyBtn = row.querySelector(".copy-btn");
+    if (copyBtn) copyBtn.addEventListener("click", () => copyInstallCmd(copyBtn));
+
     return row;
+  }
+
+  function copyInstallCmd(btn) {
+    const text = btn.dataset.copy;
+    navigator.clipboard.writeText(text).then(() => {
+      const original = btn.textContent;
+      btn.textContent = "Copied";
+      btn.classList.add("is-copied");
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.classList.remove("is-copied");
+      }, 1500);
+    });
+  }
+
+  function toggleCompare(id, checked) {
+    if (checked) {
+      if (state.compareSet.size >= MAX_COMPARE) return;
+      state.compareSet.add(id);
+    } else {
+      state.compareSet.delete(id);
+    }
+    updateCompareCheckboxes();
+    renderCompareTray();
+  }
+
+  // Keeps every rendered compare checkbox in sync with state (checked + disabled-at-cap),
+  // without a full results re-render — toggling compare shouldn't reshuffle the list.
+  function updateCompareCheckboxes() {
+    els.list.querySelectorAll("[data-compare-id]").forEach((input) => {
+      const id = input.dataset.compareId;
+      const checked = state.compareSet.has(id);
+      input.checked = checked;
+      input.disabled = !checked && state.compareSet.size >= MAX_COMPARE;
+    });
+  }
+
+  function renderCompareTray() {
+    const ids = [...state.compareSet];
+    els.compareTray.hidden = ids.length === 0;
+    if (ids.length === 0) return;
+
+    els.compareTrayItems.innerHTML = ids
+      .map((id) => {
+        const model = MODELS.find((m) => m.id === id);
+        return `
+          <span class="compare-chip">
+            ${model.name} ${model.params}
+            <button type="button" data-remove-id="${id}" aria-label="Remove ${model.name} ${model.params} from comparison">&times;</button>
+          </span>`;
+      })
+      .join("");
+
+    els.compareTrayItems.querySelectorAll("[data-remove-id]").forEach((btn) => {
+      btn.addEventListener("click", () => toggleCompare(btn.dataset.removeId, false));
+    });
+
+    els.compareOpen.disabled = ids.length < 2;
+    els.compareOpen.textContent = ids.length < 2 ? "Select 1 more to compare" : `Compare ${ids.length} models`;
+  }
+
+  function openCompareOverlay() {
+    const availability = computeAvailability();
+    const diskGB = parseFloat(els.disk.value) || 0;
+    const ids = [...state.compareSet];
+    const models = ids.map((id) => MODELS.find((m) => m.id === id));
+    const fits = models.map((m) => computeFit(m, availability, diskGB));
+
+    document.getElementById("compare-title").textContent = `Comparing ${models.length} models`;
+    els.compareBody.innerHTML = buildCompareTable(models, fits, availability);
+    els.compareBody.querySelectorAll(".copy-btn").forEach((btn) => {
+      btn.addEventListener("click", () => copyInstallCmd(btn));
+    });
+
+    els.compareOverlay.hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeCompareOverlay() {
+    els.compareOverlay.hidden = true;
+    document.body.style.overflow = "";
+  }
+
+  function buildCompareTable(models, fits, availability) {
+    const availableLabel = availability.mode === "cpu" || availability.mode === "apple-unified" ? "RAM" : "VRAM";
+
+    const headerCells = models
+      .map((m) => `<th>${m.name}<span class="params">${m.params}</span></th>`)
+      .join("");
+
+    const row = (label, cellFn) =>
+      `<tr><th scope="row">${label}</th>${models.map((m, i) => `<td>${cellFn(m, fits[i])}</td>`).join("")}</tr>`;
+
+    const fitCell = (m, fit) => {
+      if (fit.status === "over") {
+        return `<span class="compare-status--over">Doesn't fit</span><div class="compare-sub">needs ~${fit.missingGB.toFixed(1)} GB more ${fit.missingKind === "disk" ? "disk space" : "memory"}</div>`;
+      }
+      const pct = Math.min(Math.round(fit.ratio * 100), 100);
+      const statusClass = fit.status === "good" ? "compare-status--good" : "compare-status--tight";
+      return `<span class="${statusClass}">${pct}% of your ${availableLabel}</span><div class="compare-sub">${speedNote(fit.mode, fit.quant)}</div>`;
+    };
+
+    const quantCell = (m, fit) =>
+      `${fit.quant.quant}<div class="compare-sub">${fit.quant.fileGB.toFixed(1)} GB · needs ~${fit.quant.requiredGB.toFixed(1)} GB</div>`;
+
+    const benchCell = (m) =>
+      (m.benchmarks || []).length === 0
+        ? "—"
+        : m.benchmarks.map((b) => `<span class="compare-bench">${b.benchmark} <b>${b.score}</b>${b.secondary ? "†" : ""}</span>`).join("");
+
+    const installCell = (m) =>
+      m.ollamaTag
+        ? `<code class="install-cmd">ollama pull ${m.ollamaTag}</code><button type="button" class="copy-btn" data-copy="ollama pull ${m.ollamaTag}" style="margin-top:6px;">Copy</button>`
+        : "—";
+
+    const linksCell = (m) =>
+      `<div class="compare-links">
+        <a href="${m.links.github}" target="_blank" rel="noopener">GitHub ${EXTERNAL_ICON}</a>
+        <a href="${m.links.huggingface}" target="_blank" rel="noopener">Hugging Face ${EXTERNAL_ICON}</a>
+        <a href="${m.links.ollama}" target="_blank" rel="noopener">Ollama library ${EXTERNAL_ICON}</a>
+      </div>`;
+
+    return `
+      <table class="compare-table">
+        <thead><tr><th></th>${headerCells}</tr></thead>
+        <tbody>
+          ${row("Tags", (m) => m.tags.join(", "))}
+          ${row("Context", (m) => formatContext(m.context))}
+          ${row("Default quant", (m, fit) => quantCell(m, fit))}
+          ${row("Fits your machine", (m, fit) => fitCell(m, fit))}
+          ${row("Benchmarks", (m) => benchCell(m))}
+          ${row("Runtimes", (m) => m.runtimes.join(", "))}
+          ${row("Install", (m) => installCell(m))}
+          ${row("Links", (m) => linksCell(m))}
+        </tbody>
+      </table>
+    `;
   }
 
   function renderExcludedRow(result) {
@@ -372,6 +557,22 @@
 
     els.showTight.addEventListener("change", render);
     els.resetFilters.addEventListener("click", resetFilters);
+
+    els.compareClear.addEventListener("click", () => {
+      state.compareSet.clear();
+      updateCompareCheckboxes();
+      renderCompareTray();
+    });
+    els.compareOpen.addEventListener("click", () => {
+      if (state.compareSet.size >= 2) openCompareOverlay();
+    });
+    els.compareClose.addEventListener("click", closeCompareOverlay);
+    els.compareOverlay.addEventListener("click", (e) => {
+      if (e.target === els.compareOverlay) closeCompareOverlay();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !els.compareOverlay.hidden) closeCompareOverlay();
+    });
 
     ["change", "input"].forEach((evt) => {
       [els.os, els.gpu, els.vram, els.ram, els.disk, els.cpu].forEach((el) => {

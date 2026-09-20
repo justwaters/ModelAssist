@@ -3,6 +3,16 @@
 // not estimated. requiredGB = fileGB + max(1.5, fileGB * 0.15), rounded to 1 decimal — the
 // runtime/context overhead on top of the raw file, applied consistently across every entry.
 //
+// context: the model's trained context window in tokens, read from each model's own config.json
+// (max_position_embeddings) where the repo is accessible. A few families (Llama, Gemma 2,
+// Code Llama, Command R) are access-gated on Hugging Face even for config.json, so those use
+// the officially published spec instead of a live read — same number, just not a live fetch.
+//
+// ollamaTag: the exact tag for `ollama pull <ollamaTag>`, verified against ollama.com's own
+// tag listings and (where ambiguous, e.g. Code Llama's base/instruct/python split) cross-checked
+// against the HF repo the tag's page links back to. Omitted when no matching tag actually exists
+// at this size (see qwen2-vl-2b) rather than guessing one.
+//
 // benchmarks[]: pulled from each model's own Hugging Face model card where available.
 // Entries flagged `secondary: true` come from another model's published comparison table
 // (several source cards are access-gated on HF or link to an external blog instead of a table),
@@ -18,6 +28,7 @@ const MODELS = [
     name: "Llama 3.2",
     params: "1B",
     paramsB: 1,
+    context: 131072,
     benchmarks: [],
     blurb: "Fast and small. Good for quick edits and simple chat, not deep reasoning.",
     tags: ["writing", "chat", "general"],
@@ -26,6 +37,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 1.3, requiredGB: 2.8 },
     ],
     runtimes: ["Ollama", "llama.cpp", "MLX"],
+    ollamaTag: "llama3.2:1b",
     links: {
       github: "https://github.com/meta-llama/llama-models",
       huggingface: "https://huggingface.co/meta-llama/Llama-3.2-1B-Instruct",
@@ -37,6 +49,7 @@ const MODELS = [
     name: "Llama 3.2",
     params: "3B",
     paramsB: 3,
+    context: 131072,
     benchmarks: [
       { area: "research", benchmark: "MMLU", score: "61.8", note: "5-shot", secondary: true },
       { area: "chat", benchmark: "Arena-Hard", score: "17.0", note: "", secondary: true },
@@ -49,6 +62,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 3.4, requiredGB: 4.9 },
     ],
     runtimes: ["Ollama", "llama.cpp", "MLX"],
+    ollamaTag: "llama3.2:3b",
     links: {
       github: "https://github.com/meta-llama/llama-models",
       huggingface: "https://huggingface.co/meta-llama/Llama-3.2-3B-Instruct",
@@ -60,6 +74,7 @@ const MODELS = [
     name: "Llama 3.1",
     params: "8B",
     paramsB: 8,
+    context: 131072,
     benchmarks: [
       { area: "research", benchmark: "MMLU", score: "69.4", note: "5-shot" },
       { area: "coding", benchmark: "HumanEval", score: "72.6", note: "pass@1" },
@@ -72,6 +87,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 8.5, requiredGB: 10.0 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio", "MLX"],
+    ollamaTag: "llama3.1:8b",
     links: {
       github: "https://github.com/meta-llama/llama-models",
       huggingface: "https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct",
@@ -83,6 +99,7 @@ const MODELS = [
     name: "Llama 3.1",
     params: "70B",
     paramsB: 70,
+    context: 131072,
     benchmarks: [],
     blurb: "The largest Llama 3.1 tier — near frontier quality, but needs serious hardware to run locally.",
     tags: ["research", "writing", "general"],
@@ -90,6 +107,7 @@ const MODELS = [
       { quant: "Q4_K_M", fileGB: 42.5, requiredGB: 48.9 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio", "MLX"],
+    ollamaTag: "llama3.1:70b",
     links: {
       github: "https://github.com/meta-llama/llama-models",
       huggingface: "https://huggingface.co/meta-llama/Llama-3.1-70B-Instruct",
@@ -102,6 +120,7 @@ const MODELS = [
     name: "Qwen2.5",
     params: "0.5B",
     paramsB: 0.5,
+    context: 32768,
     benchmarks: [],
     blurb: "Tiny and near-instant — good for quick lookups, not nuanced writing.",
     tags: ["writing", "chat", "general"],
@@ -110,6 +129,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 0.5, requiredGB: 2.0 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio", "MLX"],
+    ollamaTag: "qwen2.5:0.5b",
     links: {
       github: "https://github.com/QwenLM/Qwen2.5",
       huggingface: "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct",
@@ -121,6 +141,7 @@ const MODELS = [
     name: "Qwen2.5",
     params: "1.5B",
     paramsB: 1.5,
+    context: 32768,
     benchmarks: [],
     blurb: "A step up from the 0.5B with more reliable instruction following.",
     tags: ["writing", "chat", "general"],
@@ -129,6 +150,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 1.6, requiredGB: 3.1 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio", "MLX"],
+    ollamaTag: "qwen2.5:1.5b",
     links: {
       github: "https://github.com/QwenLM/Qwen2.5",
       huggingface: "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct",
@@ -140,6 +162,7 @@ const MODELS = [
     name: "Qwen2.5",
     params: "3B",
     paramsB: 3,
+    context: 32768,
     benchmarks: [
       { area: "research", benchmark: "MMLU", score: "65.0", note: "5-shot", secondary: true },
       { area: "chat", benchmark: "Arena-Hard", score: "32.0", note: "", secondary: true },
@@ -152,6 +175,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 3.3, requiredGB: 4.8 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio", "MLX"],
+    ollamaTag: "qwen2.5:3b",
     links: {
       github: "https://github.com/QwenLM/Qwen2.5",
       huggingface: "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct",
@@ -163,6 +187,7 @@ const MODELS = [
     name: "Qwen2.5",
     params: "7B",
     paramsB: 7,
+    context: 32768,
     benchmarks: [
       { area: "research", benchmark: "MMLU", score: "72.6", note: "5-shot", secondary: true },
       { area: "chat", benchmark: "Arena-Hard", score: "55.5", note: "", secondary: true },
@@ -175,6 +200,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 8.1, requiredGB: 9.6 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio", "MLX"],
+    ollamaTag: "qwen2.5:7b",
     links: {
       github: "https://github.com/QwenLM/Qwen2.5",
       huggingface: "https://huggingface.co/Qwen/Qwen2.5-7B-Instruct",
@@ -186,6 +212,7 @@ const MODELS = [
     name: "Qwen2.5",
     params: "14B",
     paramsB: 14,
+    context: 32768,
     benchmarks: [
       { area: "research", benchmark: "MMLU", score: "79.9", note: "", secondary: true },
       { area: "coding", benchmark: "HumanEval", score: "72.1", note: "", secondary: true },
@@ -197,6 +224,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 15.7, requiredGB: 18.1 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    ollamaTag: "qwen2.5:14b",
     links: {
       github: "https://github.com/QwenLM/Qwen2.5",
       huggingface: "https://huggingface.co/Qwen/Qwen2.5-14B-Instruct",
@@ -208,6 +236,7 @@ const MODELS = [
     name: "Qwen2.5",
     params: "32B",
     paramsB: 32,
+    context: 32768,
     benchmarks: [],
     blurb: "One of the strongest models you can still self-host on a single high-VRAM GPU.",
     tags: ["research", "writing"],
@@ -216,6 +245,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 34.8, requiredGB: 40.0 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    ollamaTag: "qwen2.5:32b",
     links: {
       github: "https://github.com/QwenLM/Qwen2.5",
       huggingface: "https://huggingface.co/Qwen/Qwen2.5-32B-Instruct",
@@ -227,6 +257,7 @@ const MODELS = [
     name: "Qwen2.5",
     params: "72B",
     paramsB: 72,
+    context: 32768,
     benchmarks: [
       { area: "research", benchmark: "MMLU", score: "85.3", note: "", secondary: true },
       { area: "coding", benchmark: "HumanEval", score: "80.4", note: "", secondary: true },
@@ -237,6 +268,7 @@ const MODELS = [
       { quant: "Q4_K_M", fileGB: 47.4, requiredGB: 54.5 },
     ],
     runtimes: ["Ollama", "llama.cpp"],
+    ollamaTag: "qwen2.5:72b",
     links: {
       github: "https://github.com/QwenLM/Qwen2.5",
       huggingface: "https://huggingface.co/Qwen/Qwen2.5-72B-Instruct",
@@ -249,6 +281,7 @@ const MODELS = [
     name: "Qwen2.5 Coder",
     params: "0.5B",
     paramsB: 0.5,
+    context: 32768,
     benchmarks: [],
     blurb: "Barely a gigabyte — useful for inline completions, not complex refactors.",
     tags: ["coding", "agents"],
@@ -257,6 +290,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 0.5, requiredGB: 2.0 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    ollamaTag: "qwen2.5-coder:0.5b",
     links: {
       github: "https://github.com/QwenLM/Qwen2.5-Coder",
       huggingface: "https://huggingface.co/Qwen/Qwen2.5-Coder-0.5B-Instruct",
@@ -268,6 +302,7 @@ const MODELS = [
     name: "Qwen2.5 Coder",
     params: "1.5B",
     paramsB: 1.5,
+    context: 32768,
     benchmarks: [],
     blurb: "A small step up for slightly more reliable completions on modest hardware.",
     tags: ["coding", "agents"],
@@ -276,6 +311,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 1.6, requiredGB: 3.1 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    ollamaTag: "qwen2.5-coder:1.5b",
     links: {
       github: "https://github.com/QwenLM/Qwen2.5-Coder",
       huggingface: "https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B-Instruct",
@@ -287,6 +323,7 @@ const MODELS = [
     name: "Qwen2.5 Coder",
     params: "3B",
     paramsB: 3,
+    context: 32768,
     benchmarks: [],
     blurb: "Handles single-file completions comfortably on a laptop.",
     tags: ["coding", "agents"],
@@ -295,6 +332,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 3.3, requiredGB: 4.8 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    ollamaTag: "qwen2.5-coder:3b",
     links: {
       github: "https://github.com/QwenLM/Qwen2.5-Coder",
       huggingface: "https://huggingface.co/Qwen/Qwen2.5-Coder-3B-Instruct",
@@ -306,6 +344,7 @@ const MODELS = [
     name: "Qwen2.5 Coder",
     params: "7B",
     paramsB: 7,
+    context: 32768,
     benchmarks: [],
     blurb: "Purpose-built for code completion and refactors at laptop-friendly size.",
     tags: ["coding", "agents"],
@@ -314,6 +353,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 8.1, requiredGB: 9.6 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    ollamaTag: "qwen2.5-coder:7b",
     links: {
       github: "https://github.com/QwenLM/Qwen2.5-Coder",
       huggingface: "https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct",
@@ -325,6 +365,7 @@ const MODELS = [
     name: "Qwen2.5 Coder",
     params: "14B",
     paramsB: 14,
+    context: 32768,
     benchmarks: [],
     blurb: "Noticeably better at multi-file reasoning than the 7B, still runs on one GPU.",
     tags: ["coding", "agents"],
@@ -333,6 +374,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 15.7, requiredGB: 18.1 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    ollamaTag: "qwen2.5-coder:14b",
     links: {
       github: "https://github.com/QwenLM/Qwen2.5-Coder",
       huggingface: "https://huggingface.co/Qwen/Qwen2.5-Coder-14B-Instruct",
@@ -344,6 +386,7 @@ const MODELS = [
     name: "Qwen2.5 Coder",
     params: "32B",
     paramsB: 32,
+    context: 32768,
     benchmarks: [],
     blurb: "Near frontier-level coding quality — needs a real workstation GPU or a lot of RAM.",
     tags: ["coding", "agents"],
@@ -352,6 +395,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 34.8, requiredGB: 40.0 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    ollamaTag: "qwen2.5-coder:32b",
     links: {
       github: "https://github.com/QwenLM/Qwen2.5-Coder",
       huggingface: "https://huggingface.co/Qwen/Qwen2.5-Coder-32B-Instruct",
@@ -364,6 +408,7 @@ const MODELS = [
     name: "DeepSeek-R1 Distill (Qwen)",
     params: "1.5B",
     paramsB: 1.5,
+    context: 131072,
     benchmarks: [
       { area: "research", benchmark: "GPQA Diamond", score: "33.8", note: "pass@1" },
       { area: "coding", benchmark: "LiveCodeBench", score: "16.9", note: "pass@1" },
@@ -375,6 +420,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 1.9, requiredGB: 3.4 },
     ],
     runtimes: ["Ollama", "llama.cpp"],
+    ollamaTag: "deepseek-r1:1.5b",
     links: {
       github: "https://github.com/deepseek-ai/DeepSeek-R1",
       huggingface: "https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
@@ -386,6 +432,7 @@ const MODELS = [
     name: "DeepSeek-R1 Distill (Qwen)",
     params: "7B",
     paramsB: 7,
+    context: 131072,
     benchmarks: [
       { area: "research", benchmark: "GPQA Diamond", score: "49.1", note: "pass@1" },
       { area: "coding", benchmark: "LiveCodeBench", score: "37.6", note: "pass@1" },
@@ -397,6 +444,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 8.1, requiredGB: 9.6 },
     ],
     runtimes: ["Ollama", "llama.cpp"],
+    ollamaTag: "deepseek-r1:7b",
     links: {
       github: "https://github.com/deepseek-ai/DeepSeek-R1",
       huggingface: "https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
@@ -408,6 +456,7 @@ const MODELS = [
     name: "DeepSeek-R1 Distill (Qwen)",
     params: "14B",
     paramsB: 14,
+    context: 131072,
     benchmarks: [
       { area: "research", benchmark: "GPQA Diamond", score: "59.1", note: "pass@1" },
       { area: "coding", benchmark: "LiveCodeBench", score: "53.1", note: "pass@1" },
@@ -419,6 +468,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 15.7, requiredGB: 18.1 },
     ],
     runtimes: ["Ollama", "llama.cpp"],
+    ollamaTag: "deepseek-r1:14b",
     links: {
       github: "https://github.com/deepseek-ai/DeepSeek-R1",
       huggingface: "https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
@@ -430,6 +480,7 @@ const MODELS = [
     name: "DeepSeek-R1 Distill (Qwen)",
     params: "32B",
     paramsB: 32,
+    context: 131072,
     benchmarks: [
       { area: "research", benchmark: "GPQA Diamond", score: "62.1", note: "pass@1" },
       { area: "coding", benchmark: "LiveCodeBench", score: "57.2", note: "pass@1" },
@@ -441,6 +492,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 34.8, requiredGB: 40.0 },
     ],
     runtimes: ["Ollama", "llama.cpp"],
+    ollamaTag: "deepseek-r1:32b",
     links: {
       github: "https://github.com/deepseek-ai/DeepSeek-R1",
       huggingface: "https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
@@ -452,6 +504,7 @@ const MODELS = [
     name: "DeepSeek-R1 Distill (Llama)",
     params: "8B",
     paramsB: 8,
+    context: 131072,
     benchmarks: [
       { area: "research", benchmark: "GPQA Diamond", score: "49.0", note: "pass@1" },
       { area: "coding", benchmark: "LiveCodeBench", score: "39.6", note: "pass@1" },
@@ -463,6 +516,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 8.5, requiredGB: 10.0 },
     ],
     runtimes: ["Ollama", "llama.cpp"],
+    ollamaTag: "deepseek-r1:8b",
     links: {
       github: "https://github.com/deepseek-ai/DeepSeek-R1",
       huggingface: "https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Llama-8B",
@@ -475,6 +529,7 @@ const MODELS = [
     name: "Mistral",
     params: "7B",
     paramsB: 7,
+    context: 32768,
     benchmarks: [
       { area: "writing", benchmark: "MMLU", score: "60.3", note: "5-shot", secondary: true },
       { area: "chat", benchmark: "Arena-Hard", score: "18.1", note: "", secondary: true },
@@ -486,6 +541,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 7.7, requiredGB: 9.2 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    ollamaTag: "mistral:7b",
     links: {
       github: "https://github.com/mistralai/mistral-inference",
       huggingface: "https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.3",
@@ -497,6 +553,7 @@ const MODELS = [
     name: "Mistral Nemo",
     params: "12B",
     paramsB: 12,
+    context: 131072,
     benchmarks: [
       { area: "writing", benchmark: "MMLU", score: "68.0", note: "5-shot" },
       { area: "writing", benchmark: "Arena-Hard", score: "39.4", note: "", secondary: true },
@@ -508,6 +565,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 13.0, requiredGB: 15.0 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    ollamaTag: "mistral-nemo:12b",
     links: {
       github: "https://github.com/mistralai/mistral-inference",
       huggingface: "https://huggingface.co/mistralai/Mistral-Nemo-Instruct-2407",
@@ -519,6 +577,7 @@ const MODELS = [
     name: "Mixtral",
     params: "8x7B",
     paramsB: 47,
+    context: 32768,
     benchmarks: [],
     blurb: "Mixture-of-experts model — needs all experts in memory even though fewer are active per token.",
     tags: ["research", "writing"],
@@ -527,6 +586,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 49.6, requiredGB: 57.0 },
     ],
     runtimes: ["Ollama", "llama.cpp"],
+    ollamaTag: "mixtral:8x7b",
     links: {
       github: "https://github.com/mistralai/mistral-inference",
       huggingface: "https://huggingface.co/mistralai/Mixtral-8x7B-Instruct-v0.1",
@@ -539,6 +599,7 @@ const MODELS = [
     name: "Phi-3.5 Mini",
     params: "3.8B",
     paramsB: 3.8,
+    context: 131072,
     benchmarks: [
       { area: "coding", benchmark: "HumanEval", score: "62.8", note: "0-shot" },
       { area: "writing", benchmark: "MMLU", score: "69.0", note: "5-shot" },
@@ -550,6 +611,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 4.1, requiredGB: 5.6 },
     ],
     runtimes: ["Ollama", "llama.cpp", "MLX"],
+    ollamaTag: "phi3.5:3.8b",
     links: {
       github: "https://github.com/microsoft/Phi-3CookBook",
       huggingface: "https://huggingface.co/microsoft/Phi-3.5-mini-instruct",
@@ -561,6 +623,7 @@ const MODELS = [
     name: "Phi-4 Mini",
     params: "3.8B",
     paramsB: 3.8,
+    context: 131072,
     benchmarks: [
       { area: "research", benchmark: "MMLU", score: "67.3", note: "5-shot" },
       { area: "chat", benchmark: "Arena-Hard", score: "32.8", note: "" },
@@ -573,6 +636,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 4.1, requiredGB: 5.6 },
     ],
     runtimes: ["Ollama", "llama.cpp", "MLX"],
+    ollamaTag: "phi4-mini:3.8b",
     links: {
       github: "https://github.com/microsoft/Phi-3CookBook",
       huggingface: "https://huggingface.co/microsoft/Phi-4-mini-instruct",
@@ -584,18 +648,20 @@ const MODELS = [
     name: "Phi-4",
     params: "14B",
     paramsB: 14,
+    context: 16384,
     benchmarks: [
       { area: "research", benchmark: "MMLU", score: "84.8", note: "" },
       { area: "research", benchmark: "GPQA", score: "56.1", note: "" },
       { area: "coding", benchmark: "HumanEval", score: "82.6", note: "" },
     ],
-    blurb: "Trained heavily on synthetic reasoning data — strong at math and structured problems.",
+    blurb: "Trained heavily on synthetic reasoning data — strong at math and structured problems. Notably shorter context than its Mini sibling.",
     tags: ["research", "coding"],
     quants: [
       { quant: "Q4_K_M", fileGB: 9.1, requiredGB: 10.6 },
       { quant: "Q8_0", fileGB: 15.6, requiredGB: 17.9 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    ollamaTag: "phi4:14b",
     links: {
       github: "https://github.com/microsoft/Phi-3CookBook",
       huggingface: "https://huggingface.co/microsoft/phi-4",
@@ -608,6 +674,7 @@ const MODELS = [
     name: "Gemma 2",
     params: "2B",
     paramsB: 2,
+    context: 8192,
     benchmarks: [],
     blurb: "The smallest Gemma 2 tier — fast responses for lightweight chat and writing.",
     tags: ["writing", "chat", "general"],
@@ -616,6 +683,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 2.8, requiredGB: 4.3 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    ollamaTag: "gemma2:2b",
     links: {
       github: "https://github.com/google-deepmind/gemma",
       huggingface: "https://huggingface.co/google/gemma-2-2b-it",
@@ -627,6 +695,7 @@ const MODELS = [
     name: "Gemma 2",
     params: "9B",
     paramsB: 9,
+    context: 8192,
     benchmarks: [
       { area: "writing", benchmark: "MMLU", score: "71.3", note: "5-shot", secondary: true },
       { area: "chat", benchmark: "Arena-Hard", score: "43.7", note: "", secondary: true },
@@ -638,6 +707,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 9.8, requiredGB: 11.3 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    ollamaTag: "gemma2:9b",
     links: {
       github: "https://github.com/google-deepmind/gemma",
       huggingface: "https://huggingface.co/google/gemma-2-9b-it",
@@ -649,6 +719,7 @@ const MODELS = [
     name: "Gemma 2",
     params: "27B",
     paramsB: 27,
+    context: 8192,
     benchmarks: [],
     blurb: "The largest Gemma 2 tier — better nuance for long-form writing and analysis.",
     tags: ["writing", "research"],
@@ -657,6 +728,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 28.9, requiredGB: 33.2 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    ollamaTag: "gemma2:27b",
     links: {
       github: "https://github.com/google-deepmind/gemma",
       huggingface: "https://huggingface.co/google/gemma-2-27b-it",
@@ -669,6 +741,7 @@ const MODELS = [
     name: "Code Llama",
     params: "7B",
     paramsB: 7,
+    context: 16384,
     benchmarks: [],
     blurb: "The smallest Code Llama tier — a lightweight baseline for code completion.",
     tags: ["coding"],
@@ -677,6 +750,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 7.2, requiredGB: 8.7 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    ollamaTag: "codellama:7b-instruct",
     links: {
       github: "https://github.com/meta-llama/codellama",
       huggingface: "https://huggingface.co/meta-llama/CodeLlama-7b-Instruct-hf",
@@ -688,6 +762,7 @@ const MODELS = [
     name: "Code Llama",
     params: "13B",
     paramsB: 13,
+    context: 16384,
     benchmarks: [],
     blurb: "Meta's dedicated code model — a reliable, older-generation coding baseline.",
     tags: ["coding"],
@@ -696,6 +771,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 13.8, requiredGB: 15.9 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    ollamaTag: "codellama:13b-instruct",
     links: {
       github: "https://github.com/meta-llama/codellama",
       huggingface: "https://huggingface.co/meta-llama/CodeLlama-13b-Instruct-hf",
@@ -707,6 +783,7 @@ const MODELS = [
     name: "Code Llama",
     params: "34B",
     paramsB: 34,
+    context: 16384,
     benchmarks: [],
     blurb: "The largest Code Llama tier — stronger multi-file reasoning, needs a serious GPU or a lot of RAM.",
     tags: ["coding"],
@@ -715,6 +792,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 35.9, requiredGB: 41.3 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    ollamaTag: "codellama:34b-instruct",
     links: {
       github: "https://github.com/meta-llama/codellama",
       huggingface: "https://huggingface.co/meta-llama/CodeLlama-34b-Instruct-hf",
@@ -727,6 +805,7 @@ const MODELS = [
     name: "StarCoder2",
     params: "3B",
     paramsB: 3,
+    context: 16384,
     benchmarks: [
       { area: "coding", benchmark: "HumanEval", score: "31.7", note: "pass@1" },
       { area: "coding", benchmark: "DS-1000", score: "25.0", note: "pass@1" },
@@ -738,6 +817,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 3.2, requiredGB: 4.7 },
     ],
     runtimes: ["Ollama", "llama.cpp"],
+    ollamaTag: "starcoder2:3b",
     links: {
       github: "https://github.com/bigcode-project/starcoder2",
       huggingface: "https://huggingface.co/bigcode/starcoder2-3b",
@@ -749,6 +829,7 @@ const MODELS = [
     name: "StarCoder2",
     params: "7B",
     paramsB: 7,
+    context: 16384,
     benchmarks: [
       { area: "coding", benchmark: "HumanEval", score: "35.4", note: "pass@1" },
       { area: "coding", benchmark: "DS-1000", score: "27.8", note: "pass@1" },
@@ -760,6 +841,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 7.6, requiredGB: 9.1 },
     ],
     runtimes: ["Ollama", "llama.cpp"],
+    ollamaTag: "starcoder2:7b",
     links: {
       github: "https://github.com/bigcode-project/starcoder2",
       huggingface: "https://huggingface.co/bigcode/starcoder2-7b",
@@ -771,6 +853,7 @@ const MODELS = [
     name: "StarCoder2",
     params: "15B",
     paramsB: 15,
+    context: 16384,
     benchmarks: [
       { area: "coding", benchmark: "HumanEval", score: "46.3", note: "pass@1" },
       { area: "coding", benchmark: "DS-1000", score: "33.8", note: "pass@1" },
@@ -782,6 +865,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 17.0, requiredGB: 19.6 },
     ],
     runtimes: ["Ollama", "llama.cpp"],
+    ollamaTag: "starcoder2:15b",
     links: {
       github: "https://github.com/bigcode-project/starcoder2",
       huggingface: "https://huggingface.co/bigcode/starcoder2-15b",
@@ -793,6 +877,7 @@ const MODELS = [
     name: "StarCoder2 Instruct",
     params: "15B",
     paramsB: 15,
+    context: 16384,
     benchmarks: [
       { area: "coding", benchmark: "HumanEval", score: "72.6", note: "pass@1" },
       { area: "coding", benchmark: "MBPP", score: "75.2", note: "pass@1" },
@@ -805,6 +890,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 17.0, requiredGB: 19.6 },
     ],
     runtimes: ["Ollama", "llama.cpp", "LM Studio"],
+    ollamaTag: "starcoder2:15b-instruct",
     links: {
       github: "https://github.com/bigcode-project/starcoder2-self-align",
       huggingface: "https://huggingface.co/bigcode/starcoder2-15b-instruct-v0.1",
@@ -817,6 +903,7 @@ const MODELS = [
     name: "LLaVA 1.6",
     params: "7B",
     paramsB: 7,
+    context: 4096,
     benchmarks: [],
     blurb: "Reads images alongside text — screenshots, diagrams, photos.",
     tags: ["vision", "general"],
@@ -825,6 +912,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 7.8, requiredGB: 9.3 },
     ],
     runtimes: ["Ollama", "llama.cpp"],
+    ollamaTag: "llava:7b-v1.6",
     links: {
       github: "https://github.com/haotian-liu/LLaVA",
       huggingface: "https://huggingface.co/liuhaotian/llava-v1.6-mistral-7b",
@@ -836,6 +924,7 @@ const MODELS = [
     name: "Qwen2-VL",
     params: "2B",
     paramsB: 2,
+    context: 32768,
     benchmarks: [],
     blurb: "The smallest Qwen2-VL tier — fast image understanding for lightweight setups.",
     tags: ["vision", "general"],
@@ -855,6 +944,7 @@ const MODELS = [
     name: "Qwen2-VL",
     params: "7B",
     paramsB: 7,
+    context: 32768,
     benchmarks: [
       { area: "vision", benchmark: "MMMU", score: "54.1", note: "val" },
       { area: "vision", benchmark: "DocVQA", score: "94.5", note: "test" },
@@ -866,6 +956,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 8.1, requiredGB: 9.6 },
     ],
     runtimes: ["Ollama", "llama.cpp"],
+    ollamaTag: "qwen2.5vl:7b",
     links: {
       github: "https://github.com/QwenLM/Qwen2-VL",
       huggingface: "https://huggingface.co/Qwen/Qwen2-VL-7B-Instruct",
@@ -878,6 +969,7 @@ const MODELS = [
     name: "Command R",
     params: "35B",
     paramsB: 35,
+    context: 131072,
     benchmarks: [],
     blurb: "Built for retrieval-augmented generation and tool use with citation support.",
     tags: ["agents", "research"],
@@ -886,6 +978,7 @@ const MODELS = [
       { quant: "Q8_0", fileGB: 37.2, requiredGB: 42.8 },
     ],
     runtimes: ["Ollama", "llama.cpp"],
+    ollamaTag: "command-r:35b",
     links: {
       github: "https://github.com/cohere-ai/cohere-toolkit",
       huggingface: "https://huggingface.co/CohereLabs/c4ai-command-r-v01",

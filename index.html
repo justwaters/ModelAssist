@@ -165,6 +165,24 @@
 
 </div>
 
+<div class="compare-tray" id="compare-tray" hidden>
+  <div class="compare-tray__items" id="compare-tray-items"></div>
+  <div class="compare-tray__actions">
+    <button type="button" class="compare-tray__clear" id="compare-clear">Clear</button>
+    <button type="button" class="compare-tray__open" id="compare-open">Compare</button>
+  </div>
+</div>
+
+<div class="compare-overlay" id="compare-overlay" hidden>
+  <div class="compare-panel" role="dialog" aria-modal="true" aria-labelledby="compare-title">
+    <div class="compare-panel__header">
+      <h2 id="compare-title">Comparing models</h2>
+      <button type="button" class="compare-panel__close" id="compare-close">Close</button>
+    </div>
+    <div class="compare-panel__body" id="compare-body"></div>
+  </div>
+</div>
+
 <script src="data.js"></script>
 <script src="app.js"></script>
 </body>
