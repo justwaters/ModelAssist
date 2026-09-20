@@ -377,6 +377,12 @@ button { font-family: inherit; }
   padding: 5px 0;
   cursor: pointer;
 }
+.filter-check-hint {
+  color: var(--ink-faint);
+  font-size: 12px;
+  line-height: 1.4;
+  margin: 0 0 8px 23px;
+}
 .filter-radio:hover,
 .filter-check:hover { color: var(--ink); }
 .filter-radio input,
