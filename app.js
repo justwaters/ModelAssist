@@ -38,7 +38,7 @@
   ];
 
   const ALL_RUNTIMES = [...new Set(MODELS.flatMap((m) => m.runtimes))];
-  const ALL_FAMILIES = [...new Set(MODELS.map((m) => m.name))].sort((a, b) => a.localeCompare(b));
+  const ALL_FAMILIES = [...new Set(MODELS.map((m) => m.family))].sort((a, b) => a.localeCompare(b));
 
   const state = {
     sort: "best",
@@ -230,7 +230,7 @@
     if (state.selectedRuntimes.size > 0 && !model.runtimes.some((r) => state.selectedRuntimes.has(r))) {
       return null; // filtered out by runtime
     }
-    if (state.selectedFamilies.size > 0 && !state.selectedFamilies.has(model.name)) {
+    if (state.selectedFamilies.size > 0 && !state.selectedFamilies.has(model.family)) {
       return null; // filtered out by family
     }
     const fit = computeFit(model, availability, diskGB);
