@@ -1,7 +1,10 @@
 /* ---------- tokens ---------- */
 :root {
+  color-scheme: light dark;
+
   --paper: #eef2f1;
   --paper-raised: #f9fbfa;
+  --surface: #ffffff;
   --ink: #12222b;
   --ink-muted: #55666d;
   --ink-faint: #8b9a9e;
@@ -20,6 +23,42 @@
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 
   --dot-grid: radial-gradient(circle, rgba(18, 34, 43, 0.07) 1px, transparent 1px);
+
+  /* Fixed regardless of theme — the compare tray is a floating dark bar in
+     both light and dark mode, not a themed surface. */
+  --tray-bg: #12222b;
+  --tray-fg: #ffffff;
+
+  /* --accent gets brighter in dark mode so it stays legible as text/links
+     against a dark page — but that same brightness fails contrast when used
+     as a solid fill under white button text. This stays constant instead. */
+  --accent-solid: #1856d6;
+}
+
+/* Same "spec paper" system, inverted — a dark datasheet rather than a paper one.
+   Every component below reads these tokens, so the whole page repaints for free;
+   the only non-token overrides are a few native-control affordances. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #10161a;
+    --paper-raised: #171f24;
+    --surface: #1f292e;
+    --ink: #e6edee;
+    --ink-muted: #93a5a9;
+    --ink-faint: #5c6d71;
+    --line: #263136;
+    --line-strong: #384347;
+    --accent: #5b9bff;
+    --accent-tint: #142033;
+    --good: #34b579;
+    --good-tint: #12271d;
+    --warn: #e0973c;
+    --warn-tint: #2c2013;
+    --over: #d9635f;
+    --over-tint: #2c1716;
+
+    --dot-grid: radial-gradient(circle, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  }
 }
 
 /* ---------- reset ---------- */
@@ -166,7 +205,7 @@ button { font-family: inherit; }
 
 .field__input {
   border: 1px solid var(--line-strong);
-  background: #fff;
+  background: var(--surface);
   color: var(--ink);
   padding: 9px 10px;
   font-size: 14.5px;
@@ -391,7 +430,7 @@ button { font-family: inherit; }
   align-items: baseline;
   gap: 4px;
   border: 1px solid var(--line-strong);
-  background: #fff;
+  background: var(--surface);
   padding: 3px 9px;
   font-size: 12px;
   color: var(--ink-muted);
@@ -458,7 +497,7 @@ button { font-family: inherit; }
   font-size: 12px;
   font-family: var(--font-mono);
   border: 1px solid var(--line-strong);
-  background: #fff;
+  background: var(--surface);
   padding: 3px 9px;
 }
 
@@ -497,7 +536,7 @@ button { font-family: inherit; }
   font-family: var(--font-sans);
   font-size: 12px;
   color: var(--ink-muted);
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--line-strong);
   padding: 4px 10px;
   cursor: pointer;
@@ -581,8 +620,13 @@ button { font-family: inherit; }
   right: 0;
   bottom: 0;
   z-index: 40;
-  background: var(--ink);
-  color: #fff;
+  background: var(--tray-bg);
+  color: var(--tray-fg);
+  /* --tray-bg is fixed near-black — in light mode that alone reads as a
+     floating bar, but on a dark page the two are close enough in value to
+     blur together. A shadow (not a background-dependent border) keeps the
+     edge visible regardless of what's directly behind it. */
+  box-shadow: 0 -8px 20px rgba(0, 0, 0, 0.35);
   padding: 14px 24px;
   display: flex;
   align-items: center;
@@ -631,7 +675,7 @@ button { font-family: inherit; }
 }
 .compare-tray__clear:hover { color: #fff; }
 .compare-tray__open {
-  background: var(--accent);
+  background: var(--accent-solid);
   color: #fff;
   border: none;
   font-size: 13.5px;
