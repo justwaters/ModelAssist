@@ -744,3 +744,32 @@ button { font-family: inherit; }
 .compare-table .compare-status--good { color: var(--good); }
 .compare-table .compare-status--tight { color: var(--warn); }
 .compare-table .compare-status--over { color: var(--over); }
+
+/* ---------- mobile density ---------- */
+@media (max-width: 560px) {
+  /* The gauge track and its label were sharing one flex row — on a phone the
+     label text alone is nearly as wide as the card, so the track (flex:1)
+     got squeezed down to a sliver and the bar effectively disappeared.
+     Stack them instead so the bar always renders at full, readable width. */
+  .fit-gauge {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+  .fit-gauge__track {
+    /* flex:1 sets flex-basis:0%, which targets the main axis — once the
+       container switches to column, that's height, so flex:1 would silently
+       collapse the bar's explicit height:6px to zero. Drop it now that the
+       track no longer needs to share horizontal space with the label. */
+    flex: none;
+    max-width: none;
+  }
+
+  .panel { padding: 18px; }
+  .model-row__body { padding: 16px; }
+  .model-row__spec { gap: 8px 14px; }
+  .runtime-row, .links-row, .install-row { gap: 7px; }
+  .bench-table { gap: 5px; }
+
+  .compare-toggle { font-size: 11.5px; }
+}
