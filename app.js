@@ -25,6 +25,11 @@
     compareOverlay: document.getElementById("compare-overlay"),
     compareClose: document.getElementById("compare-close"),
     compareBody: document.getElementById("compare-body"),
+    filterPane: document.querySelector(".filter-pane"),
+    mobileFilterFab: document.getElementById("mobile-filter-fab"),
+    mobileFilterBadge: document.getElementById("mobile-filter-badge"),
+    filterSheetBackdrop: document.getElementById("filter-sheet-backdrop"),
+    filterSheetDone: document.getElementById("filter-sheet-done"),
   };
 
   const MAX_COMPARE = 4;
@@ -414,6 +419,7 @@
   function renderCompareTray() {
     const ids = [...state.compareSet];
     els.compareTray.hidden = ids.length === 0;
+    els.mobileFilterFab.classList.toggle("is-above-tray", ids.length > 0);
     if (ids.length === 0) return;
 
     els.compareTrayItems.innerHTML = ids
@@ -435,6 +441,41 @@
     els.compareOpen.textContent = ids.length < 2 ? "Select 1 more to compare" : `Compare ${ids.length} models`;
   }
 
+  // Two independent fixed overlays (compare + mobile filter sheet) can each
+  // want the body scroll locked. Track how many are open so closing one
+  // doesn't unlock scroll while the other is still showing.
+  const openOverlays = new Set();
+  function lockBodyScroll(id) {
+    openOverlays.add(id);
+    document.body.style.overflow = "hidden";
+  }
+  function unlockBodyScroll(id) {
+    openOverlays.delete(id);
+    if (openOverlays.size === 0) document.body.style.overflow = "";
+  }
+
+  function openFilterSheet() {
+    els.filterPane.classList.add("is-open");
+    els.filterSheetBackdrop.hidden = false;
+    lockBodyScroll("filters");
+  }
+  function closeFilterSheet() {
+    els.filterPane.classList.remove("is-open");
+    els.filterSheetBackdrop.hidden = true;
+    unlockBodyScroll("filters");
+  }
+
+  function updateFilterBadge() {
+    const activeCount =
+      state.selectedTags.size +
+      (ALL_FAMILIES.length - state.selectedFamilies.size) +
+      (ALL_RUNTIMES.length - state.selectedRuntimes.size) +
+      (state.sort !== "best" ? 1 : 0) +
+      (els.showTight && !els.showTight.checked ? 1 : 0);
+    els.mobileFilterBadge.hidden = activeCount === 0;
+    els.mobileFilterBadge.textContent = activeCount;
+  }
+
   function openCompareOverlay() {
     const availability = computeAvailability();
     const diskGB = parseFloat(els.disk.value) || 0;
@@ -449,12 +490,12 @@
     });
 
     els.compareOverlay.hidden = false;
-    document.body.style.overflow = "hidden";
+    lockBodyScroll("compare");
   }
 
   function closeCompareOverlay() {
     els.compareOverlay.hidden = true;
-    document.body.style.overflow = "";
+    unlockBodyScroll("compare");
   }
 
   function buildCompareTable(models, fits, availability) {
@@ -571,6 +612,8 @@
     } else {
       els.excludedWrap.hidden = true;
     }
+
+    updateFilterBadge();
   }
 
   function init() {
@@ -596,8 +639,15 @@
     els.compareOverlay.addEventListener("click", (e) => {
       if (e.target === els.compareOverlay) closeCompareOverlay();
     });
+
+    els.mobileFilterFab.addEventListener("click", openFilterSheet);
+    els.filterSheetDone.addEventListener("click", closeFilterSheet);
+    els.filterSheetBackdrop.addEventListener("click", closeFilterSheet);
+
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && !els.compareOverlay.hidden) closeCompareOverlay();
+      if (e.key !== "Escape") return;
+      if (!els.compareOverlay.hidden) closeCompareOverlay();
+      if (els.filterPane.classList.contains("is-open")) closeFilterSheet();
     });
 
     ["change", "input"].forEach((evt) => {

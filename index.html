@@ -108,6 +108,11 @@
 
     <div class="layout">
       <aside class="filter-pane" aria-label="Sort and filter results">
+        <div class="filter-pane__mobile-header">
+          <span>Filters</span>
+          <button type="button" class="filter-pane__done" id="filter-sheet-done">Done</button>
+        </div>
+
         <details class="filter-group">
           <summary class="filter-group__title">Sort by</summary>
           <div class="filter-group__body" id="sort-options"></div>
@@ -137,6 +142,11 @@
 
         <button type="button" class="reset-filters" id="reset-filters">Reset filters</button>
       </aside>
+
+      <div class="filter-sheet-backdrop" id="filter-sheet-backdrop" hidden></div>
+      <button type="button" class="mobile-filter-fab" id="mobile-filter-fab">
+        Filters<span class="mobile-filter-fab__badge" id="mobile-filter-badge" hidden></span>
+      </button>
 
       <section class="results" aria-labelledby="results-heading">
         <div class="results__header">
